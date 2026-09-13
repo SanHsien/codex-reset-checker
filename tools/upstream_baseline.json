@@ -1,0 +1,9 @@
+{
+  "repo": "https://github.com/doggy8088/codex-reset-checker.git",
+  "branch": "main",
+  "reviewed_through": "76dbb0b2ce3def7e9c5832135d1c84382ea2499c",
+  "reviewed_date": "2026-09-12",
+  "reviewed_pr_through": 4,
+  "reviewed_issue_through": 0,
+  "decision_log": "docs/DECISIONS.md"
+}
