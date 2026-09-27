@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+package-lock.json.bak
+
+# Python & Dev Tools
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+
+# Environment and sensitive data
+.env
+.env.*
+auth.json
+
+# Local reports
+upstream-review-report.md
+dependency-freshness-report.md
+
+# Packaging
+*.tgz
+*.tar.gz
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS artifacts
+.DS_Store
+Thumbs.db

@@ -1,0 +1,35 @@
+name: Upstream check
+
+on:
+  schedule:
+    - cron: "0 2 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check-upstream:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Check for unreviewed upstream changes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: pwsh
+        run: |
+          python tools/check_upstream_updates.py --strict --output upstream-review-report.md
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "::error::Unreviewed upstream commits, PRs, or issues found!"
+            Get-Content upstream-review-report.md
+            exit 1
+          }
