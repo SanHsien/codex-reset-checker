@@ -87,13 +87,14 @@ async function withFakeHttps(responses, callback) {
   }
 }
 
-function createAuthFile(accessToken = 'token-secret', accountId = 'account-secret') {
+function createAuthFile(accessToken = 'token-secret', accountId = 'account-secret', extraTokens = {}) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'codex-reset-checker-'));
   const authPath = path.join(directory, 'auth.json');
   fs.writeFileSync(authPath, JSON.stringify({
     tokens: {
       access_token: accessToken,
       account_id: accountId,
+      ...extraTokens,
     },
   }));
 
@@ -1395,6 +1396,178 @@ async function testWatchHumanOutputEndsWithControls() {
   }
 }
 
+function createIdToken(authClaims) {
+  const encode = (value) => Buffer.from(JSON.stringify(value)).toString('base64')
+    .replace(/=+$/, '')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_');
+  return `${encode({ alg: 'none' })}.${encode({ 'https://api.openai.com/auth': authClaims })}.signature`;
+}
+
+const CLOUDFLARE_CHALLENGE = {
+  statusCode: 403,
+  statusMessage: 'Forbidden',
+  body: '<html><body>challenge</body></html>',
+};
+
+async function testAccountStatusRetriesAfterCloudflareChallenge() {
+  const auth = createAuthFile();
+
+  try {
+    const captured = await captureConsole(() => withFakeHttps(
+      {
+        '/backend-api/wham/rate-limit-reset-credits': {
+          body: { available_count: 2, credits: [] },
+        },
+        '/backend-api/wham/usage': { body: usageResponse() },
+        '/backend-api/accounts/check/v4-2023-04-27': [
+          CLOUDFLARE_CHALLENGE,
+          {
+            body: {
+              accounts: {
+                'account-secret': {
+                  account: { account_id: 'account-secret' },
+                  entitlement: { expires_at: '2026-10-05T16:31:16+00:00' },
+                },
+              },
+            },
+          },
+        ],
+      },
+      async (calls) => {
+        await checker.runOnce({ authPath: auth.authPath, json: false, timeFormat: 'utc' });
+        return calls;
+      }
+    ));
+
+    const accountCalls = captured.result.filter(
+      (call) => call.path === '/backend-api/accounts/check/v4-2023-04-27'
+    );
+    assert.strictEqual(accountCalls.length, 2, '遇到 Cloudflare 挑戰應重試一次');
+    accountCalls.forEach((call) => {
+      assert.strictEqual(call.headers['User-Agent'], undefined, '不應偽裝成瀏覽器');
+      assert.strictEqual(call.headers.Accept, 'application/json');
+    });
+    assert.ok(captured.stdout.some((line) => line.includes('續約時間：2026-10-05 16:31 +00:00')));
+  } finally {
+    auth.cleanup();
+  }
+}
+
+async function testRenewalFallsBackToIdTokenClaim() {
+  const auth = createAuthFile('token-secret', 'account-secret', {
+    id_token: createIdToken({
+      chatgpt_plan_type: 'prolite',
+      chatgpt_subscription_active_until: '2026-10-05T10:31:16+00:00',
+    }),
+  });
+
+  try {
+    const captured = await captureConsole(() => withFakeHttps(
+      {
+        '/backend-api/wham/rate-limit-reset-credits': {
+          body: { available_count: 2, credits: [] },
+        },
+        '/backend-api/wham/usage': { body: usageResponse() },
+        '/backend-api/accounts/check/v4-2023-04-27': CLOUDFLARE_CHALLENGE,
+      },
+      async () => checker.runOnce({ authPath: auth.authPath, json: false, timeFormat: 'utc' })
+    ));
+
+    assert.ok(captured.stdout.some((line) => line.includes('續約時間：2026-10-05 10:31 +00:00')));
+    assert.strictEqual(captured.result.renewalAtFallback, '2026-10-05T10:31:16+00:00');
+  } finally {
+    auth.cleanup();
+  }
+}
+
+async function testRenewalFallbackIgnoresMalformedIdToken() {
+  const auth = createAuthFile('token-secret', 'account-secret', { id_token: 'not-a-jwt' });
+
+  try {
+    const captured = await captureConsole(() => withFakeHttps(
+      {
+        '/backend-api/wham/rate-limit-reset-credits': {
+          body: { available_count: 2, credits: [] },
+        },
+        '/backend-api/wham/usage': { body: usageResponse() },
+        '/backend-api/accounts/check/v4-2023-04-27': CLOUDFLARE_CHALLENGE,
+      },
+      async () => checker.runOnce({ authPath: auth.authPath, json: false })
+    ));
+
+    assert.ok(captured.stdout.some((line) => line.includes('續約時間：N/A')));
+  } finally {
+    auth.cleanup();
+  }
+}
+
+async function testWatchRedrawKeepsRenewalFallback() {
+  const auth = createAuthFile('token-secret', 'account-secret', {
+    id_token: createIdToken({ chatgpt_subscription_active_until: '2026-10-05T10:31:16+00:00' }),
+  });
+  const originalLog = console.log;
+  const output = new EventEmitter();
+  const input = new EventEmitter();
+  const stdout = [];
+  output.columns = 120;
+  output.rows = 40;
+  output.isTTY = true;
+  output.write = () => {};
+  input.isTTY = true;
+  input.isRaw = false;
+  input.readableFlowing = null;
+  input.isPaused = () => true;
+  input.setRawMode = () => {
+    input.isRaw = true;
+  };
+  input.resume = () => {};
+  input.pause = () => {};
+  console.log = (value = '') => stdout.push(String(value));
+
+  try {
+    await withFakeHttps(
+      {
+        '/backend-api/wham/rate-limit-reset-credits': {
+          body: { available_count: 2, credits: [] },
+        },
+        '/backend-api/wham/usage': { body: usageResponse() },
+        '/backend-api/accounts/check/v4-2023-04-27': CLOUDFLARE_CHALLENGE,
+      },
+      async () => {
+        const watcher = checker.startWatch(
+          { authPath: auth.authPath, json: false, watch: true, timeFormat: 'utc' },
+          {
+            output,
+            input,
+            signalEmitter: new EventEmitter(),
+            setIntervalFunction: () => ({}),
+            clearIntervalFunction: () => {},
+          }
+        );
+
+        await watcher.ready;
+        const firstRenderLength = stdout.length;
+        const zoneRow = stdout.findIndex((line) => line.includes('重設時間')) + 1;
+
+        input.emit('data', Buffer.from(`\x1b[<0;5;${zoneRow}M`));
+        await new Promise((resolve) => setImmediate(resolve));
+        const redraw = stdout.slice(firstRenderLength);
+        assert.ok(redraw.length > 0, '點擊重設時間應重繪畫面');
+        assert.ok(
+          redraw.some((line) => line.includes('續約時間：2026-10-05 10:31 +00:00')),
+          '重繪後仍應顯示備援的續約時間'
+        );
+
+        watcher.stop();
+      }
+    );
+  } finally {
+    console.log = originalLog;
+    auth.cleanup();
+  }
+}
+
 async function testRequestsReuseHeadersAndEndpoints() {
   const manualResponse = { available_count: 2, credits: [] };
   const usage = usageResponse();
@@ -2341,6 +2514,10 @@ const tests = [
   ['watch 滑鼠點擊重設時間可在倒數與確切時間間切換', testWatchMouseClickTogglesResetTime],
   ['watch 點擊命中區對應實際重設時間列', testWatchUsageZonesMatchRenderedRows],
   ['watch 輸出最後一行顯示操作提示', testWatchHumanOutputEndsWithControls],
+  ['帳戶狀態遇到 Cloudflare 挑戰會重試且不偽裝瀏覽器', testAccountStatusRetriesAfterCloudflareChallenge],
+  ['帳戶狀態查詢失敗時以 id_token 的訂閱期限作為續約時間', testRenewalFallsBackToIdTokenClaim],
+  ['id_token 格式錯誤時續約時間顯示 N/A', testRenewalFallbackIgnoresMalformedIdToken],
+  ['watch 重繪時保留備援的續約時間', testWatchRedrawKeepsRenewalFallback],
   ['兩個端點共用標頭且路徑正確', testRequestsReuseHeadersAndEndpoints],
   ['reset 成功時以 POST 傳送 UUID 並重新查詢', testResetSuccessPostsUuidAndRefetchesUsage],
   ['reset 取消時不會送出 POST', testResetCancellationDoesNotPost],

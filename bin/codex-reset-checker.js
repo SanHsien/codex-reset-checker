@@ -11,6 +11,7 @@ const RATE_LIMIT_API_URL = 'https://chatgpt.com/backend-api/wham/rate-limit-rese
 const RESET_CONSUME_API_URL =
   'https://chatgpt.com/backend-api/wham/rate-limit-reset-credits/consume';
 const USAGE_API_URL = 'https://chatgpt.com/backend-api/wham/usage';
+const ACCOUNT_STATUS_API_URL = 'https://chatgpt.com/backend-api/accounts/check/v4-2023-04-27';
 const GPT_RESERVE_HELP_URL =
   'https://help.openai.com/zh-hant/articles/20001499-luna-reserve-in-codex-and-chatgpt-work';
 
@@ -468,6 +469,7 @@ function loadCredentials(authPath) {
   return {
     accessToken,
     accountId,
+    idToken: tokens.id_token,
   };
 }
 
@@ -694,6 +696,20 @@ function requestRateLimit(accessToken, accountId) {
 
 function requestUsage(accessToken, accountId) {
   return requestJson(USAGE_API_URL, accessToken, accountId);
+}
+
+async function requestAccountStatus(accessToken, accountId) {
+  const headers = { Accept: 'application/json' };
+  try {
+    return await requestJson(ACCOUNT_STATUS_API_URL, accessToken, accountId, headers);
+  } catch (error) {
+    if (error.statusCode !== 403) {
+      throw error;
+    }
+
+    // Cloudflare 會挑戰首次完整 TLS 握手的連線；重試時沿用已快取的 TLS session 即可通過。
+    return requestJson(ACCOUNT_STATUS_API_URL, accessToken, accountId, headers);
+  }
 }
 
 function requestConsumeReset(accessToken, accountId, redeemRequestId, dependencies = {}) {
@@ -1666,6 +1682,23 @@ function getSubscriptionExpiresAt(accountStatus, accountId) {
     : null;
 }
 
+function getSubscriptionActiveUntil(idToken) {
+  const payloadSegment = typeof idToken === 'string' ? idToken.split('.')[1] : null;
+  if (!payloadSegment) {
+    return null;
+  }
+
+  try {
+    const payload = JSON.parse(
+      Buffer.from(payloadSegment.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8')
+    );
+    const authClaims = isObject(payload) ? payload['https://api.openai.com/auth'] : null;
+    return isObject(authClaims) ? authClaims.chatgpt_subscription_active_until ?? null : null;
+  } catch (error) {
+    return null;
+  }
+}
+
 function buildHeaderDetailLines(nowText, contentWidth, accountInfo = {}) {
   const queryTime = `${paint('dim', '查詢時間')}：${paint('cyan', nowText)}`;
   const plan = `${paint('dim', '方案')}：${paint('cyan', formatPlanName(accountInfo.planType))}`;
@@ -2141,23 +2174,12 @@ async function runReset(options, dependencies = {}) {
 
 async function runOnce(options) {
   const authPath = options.authPath;
-  const { accessToken, accountId } = loadCredentials(authPath);
+  const { accessToken, accountId, idToken } = loadCredentials(authPath);
 
   const [rateLimitRequest, usageRequest, accountRequest] = await Promise.allSettled([
     requestRateLimit(accessToken, accountId),
     requestUsage(accessToken, accountId),
-    requestJson(
-      'https://chatgpt.com/backend-api/accounts/check/v4-2023-04-27',
-      accessToken,
-      accountId,
-      {
-        Accept: 'application/json',
-        Origin: 'https://chatgpt.com',
-        Referer: 'https://chatgpt.com/',
-        'User-Agent':
-          'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/138.0.0.0 Safari/537.36',
-      }
-    ),
+    requestAccountStatus(accessToken, accountId),
   ]);
 
   if (rateLimitRequest.status === 'rejected') {
@@ -2193,12 +2215,14 @@ async function runOnce(options) {
     ...options,
     accessToken,
     accountId,
+    renewalAtFallback: getSubscriptionActiveUntil(idToken),
   });
 }
 
 function renderOutput(result, usage, usageRaw, usageError, accountStatus, options) {
   const accessToken = options.accessToken;
   const accountId = options.accountId;
+  const renewalAtFallback = options.renewalAtFallback ?? null;
 
   if (typeof options.beforeWatchRender === 'function') {
     options.beforeWatchRender();
@@ -2233,6 +2257,7 @@ function renderOutput(result, usage, usageRaw, usageError, accountStatus, option
       usageRaw,
       usageError,
       accountStatus,
+      renewalAtFallback,
     };
   }
 
@@ -2259,7 +2284,7 @@ function renderOutput(result, usage, usageRaw, usageError, accountStatus, option
 
   printHeader(usageLayout.boxContentWidth, {
     planType: usageRaw && typeof usageRaw === 'object' ? usageRaw.plan_type : null,
-    renewalAt: getSubscriptionExpiresAt(accountStatus, accountId),
+    renewalAt: getSubscriptionExpiresAt(accountStatus, accountId) ?? renewalAtFallback,
     timeFormat: displayOptions.timeFormat,
     renderState: displayOptions.renderState,
   });
@@ -2291,6 +2316,7 @@ function renderOutput(result, usage, usageRaw, usageError, accountStatus, option
     usageRaw,
     usageError,
     accountStatus,
+    renewalAtFallback,
   };
 }
 
@@ -2424,6 +2450,7 @@ function startWatch(options, dependencies = {}) {
             lastRenderData.accountStatus,
             {
               ...options,
+              renewalAtFallback: lastRenderData.renewalAtFallback,
               beforeWatchRender: prepareScreen,
               getWatchCountdownSeconds: getCountdownSeconds,
               onWatchFooterRendered: (state) => {
@@ -2653,6 +2680,7 @@ module.exports = {
   renderOutput,
   requestJson,
   requestJsonRequest,
+  requestAccountStatus,
   requestConsumeReset,
   requestRateLimit,
   requestUsage,

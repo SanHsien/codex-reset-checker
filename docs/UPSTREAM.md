@@ -72,12 +72,12 @@ Baseline 代表「已審查」，不代表「全部已合併」。
 為避免每次巡檢重複評估既有項目，本專案實施嚴格的水位線（Watermark）機制：
 
 1. **基準水位鎖定**：
-   - Commit 水位：`76dbb0b2ce3def7e9c5832135d1c84382ea2499c`（短 SHA `76dbb0b`）
+   - Commit 水位：`b04cae63eb4dffddfe26da015b716a34bdf5e9a3`（短 SHA `b04cae6`，v1.0.2；fork 起點為 `76dbb0b`）
    - PR 水位：`4`
    - Issue 水位：`0`
    - 記錄於 [`tools/upstream_baseline.json`](../tools/upstream_baseline.json)。
 
 2. **增量巡檢機制**：
    - 每次執行 `tools/check_upstream_updates.py` 或 GitHub Actions 每週排程時，檢查器會自動過濾 `number <= watermark` 的項目。
-   - 只有編號大於 **#4** 的新開 PR / Issue，或 `main` 上高於 `76dbb0b` 的新 Commit，才會出現在待審報告中。
+   - 只有編號大於 **#4** 的新開 PR / Issue，或 `main` 上高於 `b04cae6` 的新 Commit，才會出現在待審報告中。
    - 當新項目被審查完畢並於 `docs/DECISIONS.md` 記錄結論後，再遞增更新 baseline 水位。

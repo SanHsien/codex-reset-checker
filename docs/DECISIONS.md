@@ -32,3 +32,14 @@
 - **標籤清理**：刪除遠端 `origin` 與本機 24 個過期 tags（`v0.1.0` ~ `v1.0.0`），僅保留最新正式版本標籤 `v1.0.1`。
 - **缺陷修復 (R-04)**：修復 `bin/codex-reset-checker.js` 跨 chunk 多位元組 UTF-8 字元截斷問題，以 `Buffer.concat(chunks).toString('utf8')` 保證資料流完整。
 - **相容性修復 (R-05)**：修復 `scripts/check-codex-rate-limit.ps1` 在現代 PowerShell 7+ (pwsh) 下未能解析 HTTP 狀態碼之問題。
+
+## 2026-09-30：上游審查 86ecbda、b04cae6（v1.0.2）
+
+- **範圍**：2 個 commit、0 個新 PR（水位 #4）、0 個新 issue（水位 #0）。
+- `86ecbda`（續約時間因 Cloudflare 阻擋顯示 N/A）：**採用**。歷史無共同祖先，以 `git apply` 套用上游
+  `bin/codex-reset-checker.js` 與 `test/codex-reset-checker.test.js` 的 diff（乾淨套用，不與本 fork 的
+  R-04 UTF-8 chunk 修正重疊）：帳號狀態請求遇 403 重試一次（沿用 TLS session），並改讀 id_token 的
+  `chatgpt_subscription_active_until` 作為備援。仍為唯讀查詢，未新增本機寫入；fork gate 涵蓋新增測試。
+- `b04cae6`（release 1.0.2：CHANGELOG、package 版本、首頁版號）：not-applicable，版本識別屬上游；本 fork
+  不轉載上游版號。
+- 基準推進到 `b04cae63eb4dffddfe26da015b716a34bdf5e9a3`（v1.0.2）。

@@ -82,7 +82,7 @@ def test_baseline_file_is_valid_and_complete() -> None:
     assert baseline["repo"] == "https://github.com/doggy8088/codex-reset-checker.git"
     assert baseline["branch"] == "main"
     assert len(baseline["reviewed_through"]) == 40
-    assert baseline["reviewed_through"] == "76dbb0b2ce3def7e9c5832135d1c84382ea2499c"
+    assert baseline["reviewed_through"] == "b04cae63eb4dffddfe26da015b716a34bdf5e9a3"
     assert re.fullmatch(r"\d{4}-\d{2}-\d{2}", baseline["reviewed_date"])
     assert isinstance(baseline["reviewed_pr_through"], int)
     assert isinstance(baseline["reviewed_issue_through"], int)
@@ -124,5 +124,5 @@ def test_baseline_matches_decisions_record() -> None:
     upstream = (ROOT / "docs" / "UPSTREAM.md").read_text(encoding="utf-8")
     baseline = json.loads((ROOT / "tools" / "upstream_baseline.json").read_text(encoding="utf-8"))
     assert baseline["reviewed_date"] in decisions
-    assert "76dbb0b" in upstream
+    assert "b04cae6" in upstream
     assert "doggy8088/codex-reset-checker" in decisions
