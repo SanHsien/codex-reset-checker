@@ -1,12 +1,12 @@
 {
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Query Codex/ChatGPT usage limits and redeem a manual reset credit with confirmation or an explicit force flag.",
   "homepage": "https://github.com/SanHsien/codex-reset-checker",
   "license": "MIT",
   "architecture": {
     "64bit": {
-      "url": "https://github.com/SanHsien/codex-reset-checker/releases/download/v1.1.0/codex-reset-checker.exe",
-      "hash": "6fca15b1c461b5ae734b07f7c4edec7444bc546884749e7fa8b2a4730d1f7ca5"
+      "url": "https://github.com/SanHsien/codex-reset-checker/releases/download/v1.1.1/codex-reset-checker.exe",
+      "hash": "075dfe2b6ffed2387f8182434f5a1ca21726e72e1d7e607b730c0cf18574f560"
     }
   },
   "bin": [

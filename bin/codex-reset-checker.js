@@ -78,6 +78,7 @@ function printUsage() {
   -t, --exact-time  重設時間直接顯示確切時間，不顯示倒數
   -w, --watch     持續監看；Spacebar 刷新，q 結束
   --gui, --tray   在 Windows 啟動系統匣常駐圖示與儀表板
+  --hold          查詢後保持視窗開啟，等待按鍵後退出
   -v, --version   顯示版本資訊
   -h, --help      顯示說明`);
 }
@@ -97,6 +98,7 @@ function getCliOptions(cliArgs) {
   let timeFormatSpecified = false;
   let exactTime = false;
   let gui = false;
+  let hold = false;
 
   for (let i = 0; i < cliArgs.length; i++) {
     const arg = cliArgs[i];
@@ -113,6 +115,11 @@ function getCliOptions(cliArgs) {
 
     if (arg === '--gui' || arg === '--tray') {
       gui = true;
+      continue;
+    }
+
+    if (arg === '--hold') {
+      hold = true;
       continue;
     }
 
@@ -265,7 +272,7 @@ function getCliOptions(cliArgs) {
   }
 
   if (authPath) {
-    return { authPath, json, watch, reset, resetRequestId, force, timeFormat, exactTime, gui };
+    return { authPath, json, watch, reset, resetRequestId, force, timeFormat, exactTime, gui, hold };
   }
 
   const home = process.platform === 'win32'
@@ -282,6 +289,7 @@ function getCliOptions(cliArgs) {
     timeFormat,
     exactTime,
     gui,
+    hold,
   };
 }
 
@@ -2634,8 +2642,82 @@ function startWatch(options, dependencies = {}) {
   };
 }
 
+function isLaunchedByDoubleClick() {
+  if (process.platform !== 'win32') return false;
+  if (!process.stdout || !process.stdout.isTTY || !process.stdin || !process.stdin.isTTY) {
+    return false;
+  }
+
+  try {
+    const { dlopen, FFIType } = require('bun:ffi');
+    const { symbols } = dlopen('kernel32.dll', {
+      GetConsoleProcessList: {
+        args: [FFIType.ptr, FFIType.u32],
+        returns: FFIType.u32,
+      },
+    });
+    const pids = new Uint32Array(4);
+    const count = symbols.GetConsoleProcessList(pids, 4);
+    if (count <= 1) {
+      return true;
+    }
+  } catch {}
+
+  return false;
+}
+
+function readSingleKey() {
+  return new Promise((resolve) => {
+    const stdin = process.stdin;
+    if (!stdin || !stdin.isTTY) {
+      resolve('');
+      return;
+    }
+    const wasRaw = stdin.isRaw;
+    try {
+      stdin.setRawMode(true);
+    } catch {}
+    stdin.resume();
+    stdin.once('data', (data) => {
+      try {
+        stdin.setRawMode(wasRaw);
+      } catch {}
+      stdin.pause();
+      resolve(data.toString());
+    });
+  });
+}
+
+async function waitForExitOrAction(options) {
+  if (!process.stdin || !process.stdin.isTTY) return;
+
+  process.stdout.write(
+    paint('dim', '\n  [Enter / q] 關閉視窗    [Space] 重新整理    [w] 即時監看\n')
+  );
+
+  while (true) {
+    const key = await readSingleKey();
+    if (key === 'q' || key === 'Q' || key === '\r' || key === '\n' || key === '\u0003') {
+      break;
+    }
+    if (key === ' ') {
+      console.clear();
+      await runOnce(options);
+      process.stdout.write(
+        paint('dim', '\n  [Enter / q] 關閉視窗    [Space] 重新整理    [w] 即時監看\n')
+      );
+    } else if (key === 'w' || key === 'W') {
+      console.clear();
+      const watcher = startWatch({ ...options, watch: true });
+      await watcher.ready;
+      break;
+    }
+  }
+}
+
 async function main() {
   const options = getCliOptions(process.argv.slice(2));
+  const shouldHold = options.hold || (!options.json && isLaunchedByDoubleClick());
 
   if (options.gui) {
     if (process.platform !== 'win32') {
@@ -2655,6 +2737,9 @@ async function main() {
 
   if (options.reset) {
     await runReset(options);
+    if (shouldHold) {
+      await waitForExitOrAction(options);
+    }
     return;
   }
 
@@ -2665,12 +2750,21 @@ async function main() {
   }
 
   await runOnce(options);
+  if (shouldHold) {
+    await waitForExitOrAction(options);
+  }
 }
 
 if (require.main === module) {
-  main().catch((error) => {
+  main().catch(async (error) => {
     console.error(paint('red', `錯誤：${getErrorMessage(error)}`));
     process.exitCode = 1;
+    if (isLaunchedByDoubleClick()) {
+      try {
+        process.stdout.write(paint('gray', '\n請按任意鍵退出...'));
+        await readSingleKey();
+      } catch {}
+    }
   });
 }
 

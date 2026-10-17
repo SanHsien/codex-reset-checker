@@ -610,6 +610,7 @@ async function testWatchCliOptions() {
     timeFormat: 'local',
     exactTime: false,
     gui: false,
+    hold: false,
   });
   assert.deepStrictEqual(shortOption, {
     authPath: '/tmp/short-auth.json',
@@ -621,6 +622,7 @@ async function testWatchCliOptions() {
     timeFormat: 'local',
     exactTime: false,
     gui: false,
+    hold: false,
   });
   assert.strictEqual(equalsOption.authPath, '/tmp/equals-auth.json');
   assert.throws(
@@ -666,6 +668,7 @@ async function testResetCliOptions() {
     timeFormat: 'local',
     exactTime: false,
     gui: false,
+    hold: false,
   });
   assert.deepStrictEqual(retryOption, {
     authPath: '/tmp/retry-auth.json',
@@ -677,6 +680,7 @@ async function testResetCliOptions() {
     timeFormat: 'local',
     exactTime: false,
     gui: false,
+    hold: false,
   });
   assert.deepStrictEqual(forceOption, {
     authPath: '/tmp/force-auth.json',
@@ -688,6 +692,7 @@ async function testResetCliOptions() {
     timeFormat: 'local',
     exactTime: false,
     gui: false,
+    hold: false,
   });
   assert.deepStrictEqual(forceRetryOption, {
     authPath: '/tmp/force-retry-auth.json',
@@ -699,6 +704,7 @@ async function testResetCliOptions() {
     timeFormat: 'local',
     exactTime: false,
     gui: false,
+    hold: false,
   });
   assert.throws(
     () => checker.getCliOptions(['--reset', '--json']),
@@ -840,6 +846,14 @@ async function testGuiAndTrayCliOptions() {
   assert.strictEqual(guiOption.gui, true);
   assert.strictEqual(trayOption.gui, true);
   assert.strictEqual(defaultOption.gui, false);
+}
+
+async function testHoldCliOptions() {
+  const holdOption = checker.getCliOptions(['--hold', '/tmp/auth.json']);
+  const defaultOption = checker.getCliOptions(['/tmp/auth.json']);
+
+  assert.strictEqual(holdOption.hold, true);
+  assert.strictEqual(defaultOption.hold, false);
 }
 
 async function testExactTimeFlagRendersExactResetTime() {
@@ -2520,6 +2534,7 @@ const tests = [
   ['-v 與 --version 選項可輸出版本資訊', testVersionCliOptions],
   ['--time-format 選項可解析並驗證取值', testTimeFormatCliOptions],
   ['--gui 與 --tray 選項可正確解析', testGuiAndTrayCliOptions],
+  ['--hold 選項可正確解析', testHoldCliOptions],
   ['--exact-time 預設以確切時間顯示重設時間', testExactTimeFlagRendersExactResetTime],
   ['日期時間依 local/utc/iso 格式顯示', testFormatDateTimeModes],
   ['重設時間可切換為確切時間顯示', testFormatUsageResetExactTime],
