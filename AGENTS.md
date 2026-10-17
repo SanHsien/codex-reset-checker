@@ -73,3 +73,9 @@ pwsh -NoProfile -File tools\bootstrap_dev.ps1
 - **PR、push、release 一律指向 `SanHsien/codex-reset-checker`。** 對上游 `doggy8088/codex-reset-checker` 開 PR、push 或發 release 需要維護者在當次對話明確同意回貢；「fork 一份」「建開發環境」「比照其他 repo」都不是同意。
 - 根因是機制不是粗心：`gh` 在 fork clone 的**預設 repo 就是上游**，裸跑 `gh pr create` 必然打上去。每個 clone 先跑一次 `gh repo set-default SanHsien/codex-reset-checker`。
 - 開 PR 仍明寫 `gh pr create --repo SanHsien/codex-reset-checker --base <分支> --head <分支>`，並**讀輸出的 URL**，owner 必須是 `SanHsien`。不是就立刻 `gh pr close` 留言道歉說明，再對 origin 重開。
+
+## 發行閉環：交付標準包含編譯、tag 與 release
+
+- **承諾或實作「執行檔／發布／安裝檔」時，交付標準是完成編譯、打 tag、建立 GitHub Release 並上傳二進位資產，嚴禁停在本地或只推 commit。**
+  2026-10-17 實例：使用者要求實作免安裝執行檔與安裝流程，在本地完成程式碼與測試並 push main 後，誤以為「等待 CI 或後續手動發布」，被主人糾正「為什麼又沒有編譯，發release、tag。做事不能只做一半」。在個人 fork (`SanHsien/<repo>`) 下，若涉及執行檔與發行物，必須主動打 tag、產出 release notes、透過 `gh release create` 上傳二進位資產，形成使用者直接可下載執行的終端閉環。
+

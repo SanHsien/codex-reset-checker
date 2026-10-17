@@ -1,0 +1,20 @@
+---
+description: 實作涉及執行檔、安裝機制或發行物時，交付標準必須包含編譯、打 tag、建立 GitHub Release 並上傳二進位資產
+alwaysApply: true
+---
+
+# 發行閉環：交付標準包含編譯、tag 與 release
+
+當任務涉及「免安裝執行檔」、「安裝程式/腳本」或「軟體優化發行」時，交付標準必須是**完整的終端使用者閉環**，嚴禁停在本地或只 push commit。
+
+## 鐵則標準
+
+1. **二進位編譯**：必須實際產出可執行的二進位檔（如 `dist/codex-reset-checker.exe`），並驗證版本號與 `--help`。
+2. **版號與清單同步**：提升 `package.json` 版本號，計算二進位 SHA256 並同步更新套件管理清單（如 `scoop/*.json`）。
+3. **Git Tag 閉環**：打上對應語意化版本標籤（如 `git tag -a v1.1.0 -m "..."`）並推送至個人 fork（`git push origin v1.1.0`）。
+4. **GitHub Release 發布與資產上傳**：透過 `gh release create <tag> --repo SanHsien/<repo>` 發布 Release，並完整上傳 `.exe`、綠色壓縮包、安裝腳本與圖示等資產。
+
+## 歷史教訓
+
+- **2026-10-17 實例**：接獲優化與實作免安裝執行檔、安裝流程與 GUI 任務，在 Windows 11 本地完成程式碼、編譯與測試，並 commit/push main 後，誤以為「等待後續手動或 CI 觸發 release」，被主人嚴厲糾正「為什麼又沒有編譯，發release、tag。做事不能只做一半，你這樣怎麼讓人放心！」。
+- **根因**：交棒思維與未貫徹交付定義。對於發行類需求，若使用者無法直接從 Release 頁面下載資產或透過 `install.ps1` 下載，任務就沒有完成。
