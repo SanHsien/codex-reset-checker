@@ -6,6 +6,7 @@ const os = require('os');
 const https = require('https');
 const crypto = require('crypto');
 const readline = require('readline');
+const childProcess = require('child_process');
 
 const RATE_LIMIT_API_URL = 'https://chatgpt.com/backend-api/wham/rate-limit-reset-credits';
 const RESET_CONSUME_API_URL =
@@ -76,6 +77,7 @@ function printUsage() {
   --time-format   日期時間顯示格式：local、utc 或 iso（預設 local）
   -t, --exact-time  重設時間直接顯示確切時間，不顯示倒數
   -w, --watch     持續監看；Spacebar 刷新，q 結束
+  --gui, --tray   在 Windows 啟動系統匣常駐圖示與儀表板
   -v, --version   顯示版本資訊
   -h, --help      顯示說明`);
 }
@@ -94,6 +96,7 @@ function getCliOptions(cliArgs) {
   let timeFormat = 'local';
   let timeFormatSpecified = false;
   let exactTime = false;
+  let gui = false;
 
   for (let i = 0; i < cliArgs.length; i++) {
     const arg = cliArgs[i];
@@ -106,6 +109,11 @@ function getCliOptions(cliArgs) {
     if (arg === '--version' || arg === '-v') {
       printVersion();
       process.exit(0);
+    }
+
+    if (arg === '--gui' || arg === '--tray') {
+      gui = true;
+      continue;
     }
 
     if (arg === '--json') {
@@ -257,7 +265,7 @@ function getCliOptions(cliArgs) {
   }
 
   if (authPath) {
-    return { authPath, json, watch, reset, resetRequestId, force, timeFormat, exactTime };
+    return { authPath, json, watch, reset, resetRequestId, force, timeFormat, exactTime, gui };
   }
 
   const home = process.platform === 'win32'
@@ -273,6 +281,7 @@ function getCliOptions(cliArgs) {
     force,
     timeFormat,
     exactTime,
+    gui,
   };
 }
 
@@ -2627,6 +2636,23 @@ function startWatch(options, dependencies = {}) {
 
 async function main() {
   const options = getCliOptions(process.argv.slice(2));
+
+  if (options.gui) {
+    if (process.platform !== 'win32') {
+      console.log('系統匣 (System Tray) 目前僅支援 Windows 系統。');
+      return;
+    }
+    const vbsPath = path.join(__dirname, '..', 'scripts', 'launch-tray.vbs');
+    if (fs.existsSync(vbsPath)) {
+      childProcess.spawn('wscript.exe', [vbsPath], { detached: true, stdio: 'ignore' }).unref();
+      console.log(paint('green', '✔ 已於 Windows 背景啟動 Codex 系統匣小工具 (System Tray)。'));
+      console.log(paint('gray', '請至工作列右下角查看常駐圖示，點擊展開額度卡片。'));
+      return;
+    }
+    console.error(paint('red', '找不到系統匣啟動腳本：scripts/launch-tray.vbs'));
+    return;
+  }
+
   if (options.reset) {
     await runReset(options);
     return;

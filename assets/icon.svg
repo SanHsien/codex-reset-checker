@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <!-- 背景漸層 -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="50%" stop-color="#090d16"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </linearGradient>
+
+    <!-- 環形重置箭頭漸層 -->
+    <linearGradient id="arrowGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#06b6d4"/>
+    </linearGradient>
+
+    <linearGradient id="arrowGrad2" x1="100%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#06b6d4"/>
+      <stop offset="100%" stop-color="#10b981"/>
+    </linearGradient>
+
+    <!-- 微光濾鏡 -->
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+
+    <linearGradient id="borderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10b981" stop-opacity="0.8"/>
+      <stop offset="50%" stop-color="#3b82f6" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#06b6d4" stop-opacity="0.8"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 圓角方形主背景 -->
+  <rect x="24" y="24" width="464" height="464" rx="108" fill="url(#bgGrad)" stroke="url(#borderGrad)" stroke-width="8"/>
+
+  <!-- 內部微弱發光網格與圓形底色 -->
+  <circle cx="256" cy="256" r="168" fill="#10b981" fill-opacity="0.04" />
+  <circle cx="256" cy="256" r="132" fill="#06b6d4" fill-opacity="0.03" />
+
+  <!-- 重置箭頭環 (上半弧) -->
+  <path d="M 140 256 A 116 116 0 0 1 364 212" fill="none" stroke="url(#arrowGrad1)" stroke-width="26" stroke-linecap="round" filter="url(#glow)"/>
+  <!-- 上方箭頭頭部 -->
+  <polygon points="364,178 396,220 346,236" fill="#10b981" filter="url(#glow)"/>
+
+  <!-- 重置箭頭環 (下半弧) -->
+  <path d="M 372 256 A 116 116 0 0 1 148 300" fill="none" stroke="url(#arrowGrad2)" stroke-width="26" stroke-linecap="round" filter="url(#glow)"/>
+  <!-- 下方箭頭頭部 -->
+  <polygon points="148,334 116,292 166,276" fill="#06b6d4" filter="url(#glow)"/>
+
+  <!-- 中心終端提示符號 >_ (代表 Codex 終端機) -->
+  <g transform="translate(195, 218)">
+    <!-- 提示符 > -->
+    <path d="M 10 18 L 46 38 L 10 58" fill="none" stroke="#38bdf8" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" />
+    <!-- 游標 _ -->
+    <line x1="62" y1="58" x2="105" y2="58" stroke="#10b981" stroke-width="14" stroke-linecap="round" />
+  </g>
+
+  <!-- 底部 3 條電量/進度計量標記 (象徵 5hr / Weekly / Credits) -->
+  <g transform="translate(186, 388)">
+    <rect x="0" y="0" width="36" height="12" rx="6" fill="#10b981" />
+    <rect x="52" y="0" width="36" height="12" rx="6" fill="#38bdf8" />
+    <rect x="104" y="0" width="36" height="12" rx="6" fill="#818cf8" />
+  </g>
+</svg>

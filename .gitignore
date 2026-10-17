@@ -19,6 +19,7 @@ upstream-review-report.md
 dependency-freshness-report.md
 
 # Packaging
+dist/
 *.tgz
 *.tar.gz
 npm-debug.log*

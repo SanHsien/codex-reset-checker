@@ -609,6 +609,7 @@ async function testWatchCliOptions() {
     force: false,
     timeFormat: 'local',
     exactTime: false,
+    gui: false,
   });
   assert.deepStrictEqual(shortOption, {
     authPath: '/tmp/short-auth.json',
@@ -619,6 +620,7 @@ async function testWatchCliOptions() {
     force: false,
     timeFormat: 'local',
     exactTime: false,
+    gui: false,
   });
   assert.strictEqual(equalsOption.authPath, '/tmp/equals-auth.json');
   assert.throws(
@@ -663,6 +665,7 @@ async function testResetCliOptions() {
     force: false,
     timeFormat: 'local',
     exactTime: false,
+    gui: false,
   });
   assert.deepStrictEqual(retryOption, {
     authPath: '/tmp/retry-auth.json',
@@ -673,6 +676,7 @@ async function testResetCliOptions() {
     force: false,
     timeFormat: 'local',
     exactTime: false,
+    gui: false,
   });
   assert.deepStrictEqual(forceOption, {
     authPath: '/tmp/force-auth.json',
@@ -683,6 +687,7 @@ async function testResetCliOptions() {
     force: true,
     timeFormat: 'local',
     exactTime: false,
+    gui: false,
   });
   assert.deepStrictEqual(forceRetryOption, {
     authPath: '/tmp/force-retry-auth.json',
@@ -693,6 +698,7 @@ async function testResetCliOptions() {
     force: true,
     timeFormat: 'local',
     exactTime: false,
+    gui: false,
   });
   assert.throws(
     () => checker.getCliOptions(['--reset', '--json']),
@@ -824,6 +830,16 @@ async function testTimeFormatCliOptions() {
     () => checker.getCliOptions(['-t', '--exact-time']),
     /--exact-time 只能指定一次/
   );
+}
+
+async function testGuiAndTrayCliOptions() {
+  const guiOption = checker.getCliOptions(['--gui', '--auth', '/tmp/auth.json']);
+  const trayOption = checker.getCliOptions(['--tray', '/tmp/auth.json']);
+  const defaultOption = checker.getCliOptions(['/tmp/auth.json']);
+
+  assert.strictEqual(guiOption.gui, true);
+  assert.strictEqual(trayOption.gui, true);
+  assert.strictEqual(defaultOption.gui, false);
 }
 
 async function testExactTimeFlagRendersExactResetTime() {
@@ -2503,6 +2519,7 @@ const tests = [
   ['reset CLI 選項、冪等鍵與互斥組合可正確解析', testResetCliOptions],
   ['-v 與 --version 選項可輸出版本資訊', testVersionCliOptions],
   ['--time-format 選項可解析並驗證取值', testTimeFormatCliOptions],
+  ['--gui 與 --tray 選項可正確解析', testGuiAndTrayCliOptions],
   ['--exact-time 預設以確切時間顯示重設時間', testExactTimeFlagRendersExactResetTime],
   ['日期時間依 local/utc/iso 格式顯示', testFormatDateTimeModes],
   ['重設時間可切換為確切時間顯示', testFormatUsageResetExactTime],

@@ -1,4 +1,4 @@
-﻿# Codex 額度查詢工具（SanHsien 維護 fork）
+# Codex 額度查詢工具（SanHsien 維護 fork）
 
 <p align="center">
   <a href="README.md"><strong>繁體中文</strong></a> ·
@@ -77,7 +77,41 @@ npx @willh/codex-reset-checker
 
 ## 2. 安裝方式
 
-### 從 npm 安裝（建議）
+### Windows 一鍵安裝（免 Node.js，自動設定 PATH 與開始功能表捷徑）
+
+在 PowerShell 中執行一鍵安裝腳本：
+
+```powershell
+irm https://raw.githubusercontent.com/SanHsien/codex-reset-checker/main/scripts/install.ps1 | iex
+```
+
+腳本會自動將最新免安裝二進位檔安裝至 `~/.codex-reset-checker`、設定 User PATH 並建立開始功能表與桌面專屬圖示捷徑。
+
+### Windows 免安裝獨立執行檔（Portable Executable）
+
+無需安裝 Node.js 或任何執行環境，直接前往 [Releases 頁面](https://github.com/SanHsien/codex-reset-checker/releases) 下載 `codex-reset-checker.exe`：
+- 下載後放置於任意目錄或自訂 PATH 目錄中，即可在終端機直接輸入 `codex-reset-checker`。
+- 專案根目錄附帶 `codex-reset-tray.bat`，雙擊即可直接在背景啟動系統匣小工具。
+
+### Windows 系統匣常駐 GUI（Fluent 額度儀表板）
+
+若希望在 Windows 11 工作列右下角常駐監看額度並享有系統通知，可直接執行：
+
+```powershell
+# 方式 A：透過 CLI 指令啟動
+codex-reset-checker --gui
+
+# 方式 B：雙擊專案目錄下的批次檔（無控制台黑窗）
+.\codex-reset-tray.bat
+```
+
+### 從 Scoop 安裝（Windows）
+
+```powershell
+scoop install https://raw.githubusercontent.com/SanHsien/codex-reset-checker/main/scoop/codex-reset-checker.json
+```
+
+### 從 npm 安裝（傳統方式）
 
 ```bash
 npm install -g @willh/codex-reset-checker
@@ -181,6 +215,19 @@ codex-reset-checker --watch -t
 ```
 
 `--exact-time`（短 flag 為 `-t`）可讓額度卡片的「重設時間」預設直接顯示確切的本機時間（例如 `2026-08-08 11:52 +08:00`），而不是「約 1d 12h 23m 後重設」的倒數表示法；顯示格式仍受 `--time-format` 控制。`--watch` 模式下仍可用滑鼠點擊隨時切換回倒數顯示。
+
+### 啟動 Windows 系統匣常駐模式
+
+```bash
+codex-reset-checker --gui
+# 或
+codex-reset-checker --tray
+```
+
+在 Windows 11 下啟動常駐於右下角工作列通知區的系統匣小工具：
+- **常駐圖示狀態**：滑鼠懸停顯示當前用量比例與重置次數。
+- **左鍵點擊**：彈出 Fluent 深色模式半透明卡片，即時檢視 5 小時額度、每週額度進度條與手動重置按鈕。
+- **右鍵選單**：支援「立即刷新」、「開啟終端監看 (Watch)」、「使用重置額度」與「結束」。
 
 ### 查詢版本資訊
 

@@ -40,6 +40,28 @@ jobs:
       - name: Verify package contents
         run: npm pack --dry-run
 
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Build Standalone Windows Executable
+        shell: pwsh
+        run: tools/build_exe.ps1
+
+      - name: Upload Windows Standalone Executable Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: codex-reset-checker-windows-x64
+          path: |
+            dist/codex-reset-checker.exe
+            assets/icon.ico
+            assets/icon.png
+            scripts/codex-reset-tray.ps1
+            scripts/launch-tray.vbs
+            scripts/install.ps1
+            codex-reset-tray.bat
+
   test:
     name: Node.js ${{ matrix.node-version }} (ubuntu)
     runs-on: ubuntu-latest
