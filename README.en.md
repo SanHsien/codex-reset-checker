@@ -46,6 +46,10 @@ Options:
 - `-v, --version`: Display version information.
 - `-h, --help`: Display help documentation.
 
+## Multi-agent pipeline
+
+This repo is part of the [agent-relay](https://github.com/SanHsien/agent-relay) multi-agent dispatch and verification pipeline (role: quota and reset-time lookup). Integration with agent-relay is planned (Phase 2). The protocol spec and the index of all related repos live in agent-relay.
+
 ## License
 
 MIT License. See [`NOTICE.md`](NOTICE.md) and [`LICENSE`](LICENSE).

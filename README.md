@@ -501,3 +501,7 @@ CI 會在 `main` 的 push 與所有 pull request 上，使用 Node.js 14、18、
 - 結果不明時保留並顯示冪等 UUID，不會以新的 UUID 自動重試
 
 `/wham/usage` 與 `/wham/rate-limit-reset-credits/*` 並非 OpenAI 公開 API，回應格式、權限與可用性可能變更。這項功能顯示及使用的是 Codex 手動重置額度，不宣稱為可購買 Credits 的餘額。OpenAI 官方目前說明可在 ChatGPT 的 Codex Settings > Usage Dashboard 查看 Credits 餘額，未提供本工具可依賴的公開 Access Token API：[Using Credits for Flexible Usage in ChatGPT](https://help.openai.com/en/articles/12642688-using-credits-for-flexible-usage-in-chatgpt-plus-pro)。
+
+## 多 Agent 流水線
+
+本 repo 是 [agent-relay](https://github.com/SanHsien/agent-relay) 多 Agent 派工與驗收流水線的一環（角色：額度與重置時間查詢）。與 agent-relay 的整合規劃中（Phase 2）。協定規格與所有相關 repo 的總目錄見 agent-relay。
