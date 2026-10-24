@@ -24,6 +24,7 @@
 - CLI 入口：`bin/codex-reset-checker.js`（Node.js 14+）。
 - 腳本：`scripts/check-codex-rate-limit.ps1` 與 `scripts/check-codex-rate-limit.sh`。
 - 測試：`test/codex-reset-checker.test.js`。
+- 產品程式（`bin/`、`scripts/`、`test/`）以上游為準。
 - `tools/`：fork 維護工具（Windows gate、上游檢查、相對連結檢查）。
 - `tools/tests/`：維護契約測試。獨立於產品測試目錄。
 
