@@ -105,3 +105,51 @@ def test_tray_summary_reads_real_cli_json(tmp_path: Path) -> None:
     # 缺欄位（查詢失敗）時不得丟例外，並退回預設值
     assert empty["Credits"] == 0
     assert empty["PrimaryUsed"] == 0
+
+
+FUNCTION_PROBE = r"""
+param([string]$ScriptPath, [string]$Name, [string]$Current, [string]$Dir)
+$ast = [System.Management.Automation.Language.Parser]::ParseFile($ScriptPath, [ref]$null, [ref]$null)
+$def = $ast.Find({ param($n) $n -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $n.Name -eq $Name }, $true)
+if (-not $def) { throw "function $Name not found in $ScriptPath" }
+. ([scriptblock]::Create($def.Extent.Text))
+& $Name $Current $Dir
+"""
+
+
+def call_path_function(script: str, name: str, current: str, directory: str, tmp: Path) -> str:
+    probe = tmp / "fn_probe.ps1"
+    probe.write_text(FUNCTION_PROBE, encoding="utf-8")
+    result = run_pwsh(
+        ["-File", str(probe), str(ROOT / "scripts" / script), name, current, directory]
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    return result.stdout.strip()
+
+
+@needs_pwsh
+@pytest.mark.parametrize(
+    ("current", "expected"),
+    [
+        ("", r"C:\bin"),
+        (r"C:\Only", r"C:\Only;C:\bin"),
+        (r"C:\A;C:\B", r"C:\A;C:\B;C:\bin"),
+        (r"C:\A;C:\BIN\;C:\B", r"C:\A;C:\BIN\;C:\B"),
+        (r"C:\A;;C:\B;", r"C:\A;C:\B;C:\bin"),
+    ],
+)
+def test_install_path_entry_is_appended_once(current: str, expected: str, tmp_path: Path) -> None:
+    assert call_path_function("install.ps1", "Add-PathEntry", current, r"C:\bin", tmp_path) == expected
+
+
+@needs_pwsh
+@pytest.mark.parametrize(
+    ("current", "expected"),
+    [
+        (r"C:\bin", ""),
+        (r"C:\A;C:\bin\;C:\B", r"C:\A;C:\B"),
+        (r"C:\A", r"C:\A"),
+    ],
+)
+def test_uninstall_path_entry_is_removed(current: str, expected: str, tmp_path: Path) -> None:
+    assert call_path_function("uninstall.ps1", "Remove-PathEntry", current, r"C:\bin", tmp_path) == expected

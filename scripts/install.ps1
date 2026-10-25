@@ -16,6 +16,17 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
+# 把目錄附加到 PATH 字串；已存在（忽略大小寫與結尾反斜線）就不重複。
+# 以 @() 包住，PATH 只有一個項目時才不會被當成字串相加。
+function Add-PathEntry {
+    param([string]$PathValue, [string]$Dir)
+    $entries = @(($PathValue -split ';') | Where-Object { $_.Trim() -ne "" })
+    $target = $Dir.TrimEnd('\')
+    $exists = @($entries | Where-Object { $_.Trim().TrimEnd('\') -ieq $target }).Count -gt 0
+    if (-not $exists) { $entries += $Dir }
+    return ($entries -join ';')
+}
+
 Write-Host "==========================================" -ForegroundColor Cyan
 Write-Host "  Codex Reset Checker - Windows 安裝程式  " -ForegroundColor Green
 Write-Host "==========================================" -ForegroundColor Cyan
@@ -74,10 +85,11 @@ Write-Host "   已安裝至: $InstallDir" -ForegroundColor Gray
 Write-Host "==> [2/4] 配置 Windows 環境變數 (User PATH)..." -ForegroundColor Yellow
 try {
     $userPath = [Environment]::GetEnvironmentVariable("Path", [EnvironmentVariableTarget]::User)
-    $pathEntries = if ($userPath) { ($userPath -split ';') | Where-Object { $_.Trim() -ne "" } } else { @() }
+    $newUserPath = Add-PathEntry $userPath $binDir
 
-    if ($pathEntries -notcontains $binDir) {
-        $newUserPath = ($pathEntries + $binDir) -join ';'
+    $alreadyInPath = @(($userPath -split ';') | Where-Object { $_.Trim().TrimEnd('\') -ieq $binDir.TrimEnd('\') }).Count -gt 0
+
+    if (-not $alreadyInPath) {
         [Environment]::SetEnvironmentVariable("Path", $newUserPath, [EnvironmentVariableTarget]::User)
         $env:Path = "$binDir;$env:Path"
         Write-Host "   已將 $binDir 加入使用者 PATH 環境變數。" -ForegroundColor Green

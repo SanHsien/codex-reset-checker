@@ -11,16 +11,23 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
+# 從 PATH 字串移除目錄（忽略大小寫與結尾反斜線）；結果可能為空字串。
+function Remove-PathEntry {
+    param([string]$PathValue, [string]$Dir)
+    $target = $Dir.TrimEnd('\')
+    $entries = @(($PathValue -split ';') | Where-Object {
+        $_.Trim() -ne "" -and $_.Trim().TrimEnd('\') -ine $target
+    })
+    return ($entries -join ';')
+}
+
 Write-Host "==> 解除安裝 Codex Reset Checker..." -ForegroundColor Cyan
 
 # 1. 自 User PATH 移除
 $binDir = Join-Path $InstallDir "bin"
 $userPath = [Environment]::GetEnvironmentVariable("Path", [EnvironmentVariableTarget]::User)
 if ($userPath) {
-    $pathEntries = ($userPath -split ';') | Where-Object {
-        $_.Trim() -ne "" -and $_.Trim().TrimEnd('\') -ne $binDir.TrimEnd('\')
-    }
-    $newUserPath = $pathEntries -join ';'
+    $newUserPath = Remove-PathEntry $userPath $binDir
     [Environment]::SetEnvironmentVariable("Path", $newUserPath, [EnvironmentVariableTarget]::User)
     Write-Host "   已自使用者 PATH 移除 $binDir" -ForegroundColor Gray
 }
