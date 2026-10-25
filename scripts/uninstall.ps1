@@ -26,7 +26,7 @@ if ($userPath) {
 }
 
 # 2. 移除開始功能表捷徑
-$programsMenu = [Environment]::GetFolderPath([Environment]::SpecialFolder::Programs)
+$programsMenu = [Environment]::GetFolderPath([Environment+SpecialFolder]::Programs)
 $menuAppFolder = Join-Path $programsMenu "Codex Reset Checker"
 if (Test-Path -LiteralPath $menuAppFolder) {
     Remove-Item -LiteralPath $menuAppFolder -Recurse -Force
@@ -34,7 +34,7 @@ if (Test-Path -LiteralPath $menuAppFolder) {
 }
 
 # 3. 移除桌面捷徑
-$desktopFolder = [Environment]::GetFolderPath([Environment]::SpecialFolder::Desktop)
+$desktopFolder = [Environment]::GetFolderPath([Environment+SpecialFolder]::Desktop)
 $desktopShortcut = Join-Path $desktopFolder "Codex Reset Tray.lnk"
 if (Test-Path -LiteralPath $desktopShortcut) {
     Remove-Item -LiteralPath $desktopShortcut -Force
@@ -42,7 +42,7 @@ if (Test-Path -LiteralPath $desktopShortcut) {
 }
 
 # 4. 移除開機啟動捷徑
-$startupFolder = [Environment]::GetFolderPath([Environment]::SpecialFolder::Startup)
+$startupFolder = [Environment]::GetFolderPath([Environment+SpecialFolder]::Startup)
 $startupShortcut = Join-Path $startupFolder "CodexResetTray.lnk"
 if (Test-Path -LiteralPath $startupShortcut) {
     Remove-Item -LiteralPath $startupShortcut -Force
