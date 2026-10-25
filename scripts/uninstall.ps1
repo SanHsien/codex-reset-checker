@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Codex Reset Checker - Windows 解除安裝腳本
 #>

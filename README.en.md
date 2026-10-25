@@ -30,7 +30,7 @@ Other options:
 
 - Portable executable: download `codex-reset-checker.exe` from [Releases](https://github.com/SanHsien/codex-reset-checker/releases).
 - Scoop: `scoop install https://raw.githubusercontent.com/SanHsien/codex-reset-checker/main/scoop/codex-reset-checker.json`
-- System tray dashboard: `codex-reset-checker --gui`, or double-click `codex-reset-tray.bat` in the repo root.
+- System tray dashboard: `codex-reset-checker --gui`, or double-click `codex-reset-tray.bat` in the repo root. It prefers PowerShell 7 (`pwsh`) and falls back to the built-in Windows PowerShell 5.1 (`powershell.exe`) when `pwsh` is not on PATH.
 - npm: `npm install -g @willh/codex-reset-checker` installs the upstream package, which does not include this fork's `--gui`/`--tray`, `--hold`, or the Windows executable.
 
 ## Development Quick Start on Windows

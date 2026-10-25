@@ -96,6 +96,7 @@ irm https://raw.githubusercontent.com/SanHsien/codex-reset-checker/main/scripts/
 無需安裝 Node.js 或任何執行環境，直接前往 [Releases 頁面](https://github.com/SanHsien/codex-reset-checker/releases) 下載 `codex-reset-checker.exe`：
 - 下載後放置於任意目錄或自訂 PATH 目錄中，即可在終端機直接輸入 `codex-reset-checker`。
 - 專案根目錄附帶 `codex-reset-tray.bat`，雙擊即可直接在背景啟動系統匣小工具。
+- 系統匣小工具優先使用 PowerShell 7（`pwsh`）；PATH 找不到 `pwsh` 時自動改用 Windows 內建的 `powershell.exe`（5.1），不需另外安裝。
 
 ### Windows 系統匣常駐 GUI（Fluent 額度儀表板）
 

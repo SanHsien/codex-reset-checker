@@ -1,4 +1,4 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 <#
 .SYNOPSIS
     Codex Reset Checker - Windows 11 原生系統匣小工具 (System Tray App)
@@ -32,7 +32,8 @@ if (-not (Test-Path -LiteralPath $iconPath)) {
 # 決定 CLI 執行檔路徑
 $cliExe = Join-Path $repoRoot "dist\codex-reset-checker.exe"
 if (-not (Test-Path -LiteralPath $cliExe)) {
-    $cliExe = (Get-Command codex-reset-checker -ErrorAction SilentlyContinue)?.Source
+    $cliCmd = Get-Command codex-reset-checker -ErrorAction SilentlyContinue
+    $cliExe = if ($cliCmd) { $cliCmd.Source } else { $null }
 }
 
 # 全域狀態
