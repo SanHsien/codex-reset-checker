@@ -856,6 +856,22 @@ async function testHoldCliOptions() {
   assert.strictEqual(defaultOption.hold, false);
 }
 
+async function testHoldKeepsWindowOpenAfterError() {
+  const binPath = path.join(__dirname, '..', 'bin', 'codex-reset-checker.js');
+  const missingAuth = path.join(os.tmpdir(), `crc-no-such-auth-${process.pid}.json`);
+  const run = (extraArgs) => {
+    const result = require('child_process').spawnSync(
+      process.execPath,
+      [binPath, ...extraArgs, '--auth', missingAuth],
+      { encoding: 'utf8' }
+    );
+    return `${result.stdout}${result.stderr}`;
+  };
+
+  assert.ok(run(['--hold']).includes('請按任意鍵退出'));
+  assert.ok(!run([]).includes('請按任意鍵退出'));
+}
+
 async function testExactTimeFlagRendersExactResetTime() {
   const originalLog = console.log;
   const stdout = [];
@@ -2535,6 +2551,7 @@ const tests = [
   ['--time-format 選項可解析並驗證取值', testTimeFormatCliOptions],
   ['--gui 與 --tray 選項可正確解析', testGuiAndTrayCliOptions],
   ['--hold 選項可正確解析', testHoldCliOptions],
+  ['--hold 在查詢失敗時仍保留視窗等待按鍵', testHoldKeepsWindowOpenAfterError],
   ['--exact-time 預設以確切時間顯示重設時間', testExactTimeFlagRendersExactResetTime],
   ['日期時間依 local/utc/iso 格式顯示', testFormatDateTimeModes],
   ['重設時間可切換為確切時間顯示', testFormatUsageResetExactTime],

@@ -2759,7 +2759,7 @@ if (require.main === module) {
   main().catch(async (error) => {
     console.error(paint('red', `錯誤：${getErrorMessage(error)}`));
     process.exitCode = 1;
-    if (isLaunchedByDoubleClick()) {
+    if (process.argv.slice(2).includes('--hold') || isLaunchedByDoubleClick()) {
       try {
         process.stdout.write(paint('gray', '\n請按任意鍵退出...'));
         await readSingleKey();
