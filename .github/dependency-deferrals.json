@@ -1,0 +1,8 @@
+{
+  "deferrals": {
+    "ruff": {
+      "deferredLatest": "0.17",
+      "reason": "2026-10-25 reviewed ruff 0.17.2: E9+F on tools/ clean and tools/tests pass; >=0.16 already admits 0.17, floor stays. Expires at 0.18."
+    }
+  }
+}
