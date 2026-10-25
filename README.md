@@ -241,7 +241,7 @@ codex-reset-checker --tray
 codex-reset-checker --hold
 ```
 
-查詢完成後等待按鍵才結束，避免從檔案總管雙擊 `codex-reset-checker.exe` 時視窗一閃即關。Windows 上偵測到由雙擊啟動時會自動套用；`--json` 模式不會自動套用。
+查詢完成後等待按鍵才結束，避免從檔案總管雙擊 `codex-reset-checker.exe` 時視窗一閃即關。Windows 獨立執行檔偵測到由雙擊啟動時會自動套用（以 Node.js 執行時不偵測）；`--json` 模式不會自動套用。
 
 ### 查詢版本資訊
 

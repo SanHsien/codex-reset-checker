@@ -29,7 +29,7 @@ jobs:
         run: |
           python tools/check_upstream_updates.py --strict --output upstream-review-report.md
           if ($LASTEXITCODE -ne 0) {
-            Write-Host "::error::Unreviewed upstream commits, PRs, or issues found!"
+            Write-Host "::error::Unreviewed upstream commits, PRs, or issues found, or tickets could not be checked!"
             Get-Content upstream-review-report.md
             exit 1
           }

@@ -59,7 +59,7 @@ Options:
 - `-t, --exact-time`: Display exact timestamps instead of countdowns.
 - `-w, --watch`: Live refresh monitor (space to refresh, q to quit).
 - `--gui`, `--tray`: Start the Windows system tray icon and dashboard.
-- `--hold`: Keep the window open after the query until a key is pressed (applied automatically when launched by double-click on Windows, except with `--json`).
+- `--hold`: Keep the window open after the query until a key is pressed (the Windows executable applies it automatically when launched by double-click, except with `--json`; not detected under Node.js).
 - `-v, --version`: Display version information.
 - `-h, --help`: Display help documentation.
 
