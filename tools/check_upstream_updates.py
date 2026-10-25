@@ -300,7 +300,8 @@ def main() -> int:
         prs = collect_new_tickets(baseline, "pr")
         issues = collect_new_tickets(baseline, "issue")
         report = render_markdown(baseline, commits, prs=prs, issues=issues)
-        has_work = bool(commits) or bool(prs) or bool(issues)
+        # A ticket axis that could not be queried is not a clean one.
+        has_work = bool(commits) or bool(prs) or bool(issues) or prs is None or issues is None
     except UpstreamCheckError as exc:
         try:
             baseline = load_baseline()
