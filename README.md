@@ -65,6 +65,10 @@ npx @willh/codex-reset-checker
 .
 ├─ bin/
 │  └─ codex-reset-checker.js      Node.js CLI 主程式
+├─ scripts/                        PowerShell／Shell 查詢腳本、Windows 安裝與系統匣腳本
+├─ scoop/
+│  └─ codex-reset-checker.json     Scoop manifest
+├─ tools/                          fork 維護工具與 Windows gate
 ├─ assets/
 │  └─ codex-reset-checker-screenshot.png
 ├─ test/
@@ -116,6 +120,8 @@ scoop install https://raw.githubusercontent.com/SanHsien/codex-reset-checker/mai
 ```bash
 npm install -g @willh/codex-reset-checker
 ```
+
+npm 套件 `@willh/codex-reset-checker` 由上游發佈，不含本 fork 新增的 `--gui`／`--tray`、`--hold` 與 Windows 執行檔；需要這些功能請用上方 Windows 安裝方式或從本 repo 直接執行。
 
 ### 本機直接使用
 
@@ -228,6 +234,14 @@ codex-reset-checker --tray
 - **常駐圖示狀態**：滑鼠懸停顯示當前用量比例與重置次數。
 - **左鍵點擊**：彈出 Fluent 深色模式半透明卡片，即時檢視 5 小時額度、每週額度進度條與手動重置按鈕。
 - **右鍵選單**：支援「立即刷新」、「開啟終端監看 (Watch)」、「使用重置額度」與「結束」。
+
+### 查詢後保持視窗開啟
+
+```bash
+codex-reset-checker --hold
+```
+
+查詢完成後等待按鍵才結束，避免從檔案總管雙擊 `codex-reset-checker.exe` 時視窗一閃即關。Windows 上偵測到由雙擊啟動時會自動套用；`--json` 模式不會自動套用。
 
 ### 查詢版本資訊
 

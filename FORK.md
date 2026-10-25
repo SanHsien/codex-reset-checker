@@ -20,7 +20,7 @@
 |---|---|
 | `README.md` | 繁中主檔；加入 fork 維護資訊與快速入口 |
 | `README.en.md` | 英文鏡像；加入 fork 維護資訊 |
-| `AGENTS.md` / `CLAUDE.md` | 本 fork 的 AI 維護單一真相源 |
+| `AGENTS.md` | 本 fork 的 AI 維護單一真相源 |
 | `NOTICE.md` / `FORK.md` / `LICENSE` | 來源、授權與同步說明 |
 | `tools/dev_check.ps1` | Windows 本機一鍵 gate（整合 Python 契約與 Node 產品測試） |
 | `tools/bootstrap_dev.ps1` | Windows 本機一鍵初始化與驗收 |
@@ -28,6 +28,11 @@
 | `requirements-dev.txt` | 維護測試工具依賴清單（pytest、ruff） |
 | `.github/workflows/ci.yml` | 強化安全：針對 Windows 原生 Node.js 矩陣與 gate 驗收，防止 fork 觸發上游 npm publish |
 | `.github/workflows/upstream-check.yml` | 每週對 `upstream/main` 做未審查 commit、PR、issue 水位檢查 |
+| `.github/workflows/dependency-freshness.yml` / `.github/dependency-deferrals.json` | 每月比對維護依賴宣告與 PyPI 最新版；已審查暫緩的版本記在 deferrals |
+| `.github/workflows/codeql.yml` | CodeQL 靜態分析 |
+| `bin/codex-reset-checker.js`（`--gui`／`--tray`、`--hold`） | fork 新增：Windows 系統匣啟動與雙擊執行時保持視窗 |
+| `scripts/install.ps1`、`scripts/uninstall.ps1`、`scripts/codex-reset-tray.ps1`、`scripts/launch-tray.vbs`、`codex-reset-tray.bat` | fork 新增：Windows 一鍵安裝／移除與系統匣小工具 |
+| `tools/build_exe.ps1`、`tools/generate_icons.ps1`、`scoop/codex-reset-checker.json` | fork 新增：Windows 獨立執行檔建置、圖示與 Scoop manifest |
 | `docs/DECISIONS.md`、`docs/UPSTREAM.md`、`docs/DEVELOPMENT.md` | fork 維護文件 |
 | `REVIEW.md` | 全庫風險快照 |
 

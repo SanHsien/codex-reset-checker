@@ -43,3 +43,17 @@
 - `b04cae6`（release 1.0.2：CHANGELOG、package 版本、首頁版號）：not-applicable，版本識別屬上游；本 fork
   不轉載上游版號。
 - 基準推進到 `b04cae63eb4dffddfe26da015b716a34bdf5e9a3`（v1.0.2）。
+
+## 2026-10-25：上游複查、依賴新鮮度與上游檢查假綠
+
+- **上游範圍**：`upstream/main` 仍停在 `b04cae6`（v1.0.2），無新 commit；`refs/pull/*` 最高 `#4`（已審）；
+  手動觸發 Upstream check（`--state all` 查 PR／issue）通過，無高於水位的項目。分支
+  `doggy8088-initialize-design-context` 仍為 `dfec056`，維持 2026-09-12「不引進」結論。水位不變，僅推進審查日期。
+- **ruff 0.17 暫緩（deferral）**：PyPI 最新 `ruff 0.17.2`，以 0.17.2 實跑 `ruff check --select E9,F tools` 與
+  `tools/tests` 全綠。`>=0.16` 已涵蓋 0.17，下限是相容承諾不是靜音鍵，不提高；記入
+  `.github/dependency-deferrals.json`（`deferredLatest: 0.17`）。**觸發條件**：PyPI 出現 0.18 時自動失效、重新審查。
+- **上游檢查假綠修正**：`check_upstream_updates.py --strict` 在 `gh` 無法查詢 PR／issue 時原本回 0，
+  排程會在沒審 ticket 的情況下顯示綠燈。改為查不到即視為待處理（回 1），報告仍標示 `Not checked`。
+- **刻意不做**：workflow 的 action 釘選方式不一致（`codeql`／`dependency-freshness` 釘 SHA，其餘用 tag）。
+  統一釘 SHA 屬跨檔慣例變更，交維護者決定；Dependabot 已涵蓋 github-actions。
+  **觸發條件**：維護者同意，或出現 tag 被改寫的供應鏈事件。

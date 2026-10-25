@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.1.1] - 2026-10-17（SanHsien fork）
+
+### Fixed
+
+- 從檔案總管雙擊 `codex-reset-checker.exe` 時，查詢完成後保持視窗開啟等待按鍵；新增 `--hold` 可手動指定。
+
+## [1.1.0] - 2026-10-17（SanHsien fork）
+
+### Added
+
+- Windows 獨立執行檔（`codex-reset-checker.exe`）、一鍵安裝／移除腳本與 Scoop manifest。
+- `--gui`／`--tray`：Windows 系統匣常駐圖示與額度儀表板。
+
+## [1.0.2] - 2026-09-30（SanHsien fork，採用上游 86ecbda）
+
+### Fixed
+
+- 續約時間因 Cloudflare 阻擋顯示 N/A：帳號狀態請求遇 403 重試一次，並改讀 id_token 的 `chatgpt_subscription_active_until` 作為備援。
+
 ## [1.0.1] - 2026-09-07
 
 ### Fixed

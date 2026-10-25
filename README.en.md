@@ -18,7 +18,22 @@ Codex Reset Checker is a CLI tool designed to inspect OpenAI Codex and ChatGPT r
 - Interactive and forced credit redemption with idempotent UUID safety.
 - Windows 11 native testing and verification gates.
 
-## Quick Start on Windows
+## Install on Windows
+
+One-line installer (no Node.js required; installs the latest release binary to `~/.codex-reset-checker`, adds it to the user PATH, and creates Start menu and desktop shortcuts):
+
+```powershell
+irm https://raw.githubusercontent.com/SanHsien/codex-reset-checker/main/scripts/install.ps1 | iex
+```
+
+Other options:
+
+- Portable executable: download `codex-reset-checker.exe` from [Releases](https://github.com/SanHsien/codex-reset-checker/releases).
+- Scoop: `scoop install https://raw.githubusercontent.com/SanHsien/codex-reset-checker/main/scoop/codex-reset-checker.json`
+- System tray dashboard: `codex-reset-checker --gui`, or double-click `codex-reset-tray.bat` in the repo root.
+- npm: `npm install -g @willh/codex-reset-checker` installs the upstream package, which does not include this fork's `--gui`/`--tray`, `--hold`, or the Windows executable.
+
+## Development Quick Start on Windows
 
 ```powershell
 git clone https://github.com/SanHsien/codex-reset-checker.git
@@ -43,6 +58,8 @@ Options:
 - `--time-format <local|utc|iso>`: Date time formatting (default: local).
 - `-t, --exact-time`: Display exact timestamps instead of countdowns.
 - `-w, --watch`: Live refresh monitor (space to refresh, q to quit).
+- `--gui`, `--tray`: Start the Windows system tray icon and dashboard.
+- `--hold`: Keep the window open after the query until a key is pressed (applied automatically when launched by double-click on Windows, except with `--json`).
 - `-v, --version`: Display version information.
 - `-h, --help`: Display help documentation.
 
