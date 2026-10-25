@@ -1,5 +1,14 @@
 # Changelog
 
+## [Unreleased]
+
+### Fixed
+
+- `scripts/uninstall.ps1`：`SpecialFolder` 型別寫法錯誤使解除安裝在移除 PATH 後中斷，捷徑與安裝目錄從未被清除（0f49a67）。
+- `scripts/codex-reset-tray.ps1`：系統匣改讀 CLI `--json` 實際輸出欄位，額度次數與重置時間不再恆為 0／「即將重置」（1fbfc59）。
+- `--hold` 在查詢失敗時也保留視窗等待按鍵（1513760）。
+- `scripts/install.ps1`：User PATH 只有一個項目時不再被寫成黏在一起的字串（3b4ff3e）。
+
 ## [1.1.1] - 2026-10-17（SanHsien fork）
 
 ### Fixed

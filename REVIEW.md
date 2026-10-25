@@ -23,6 +23,10 @@
 5. **PowerShell 7+ (pwsh) 異常時未能正確捕獲 HTTP 狀態碼 (R-05)**：
    - **現象**：`scripts/check-codex-rate-limit.ps1` 原僅檢查 `$_.Exception.Response -is [System.Net.WebException]`，在現代 PowerShell 7+ (pwsh) 使用 `HttpClient` 拋出的 `HttpRequestException` 下條件恆為假，導致 HTTP 401/403/500 等狀態碼遺失。
    - **修復**：改善狀態碼讀取邏輯，優先提取 `$_.Exception.Response.StatusCode`，若無再提取 `$_.Exception.StatusCode`，完整相容 Windows PowerShell 5.1 與 PowerShell 7+。
+6. **解除安裝腳本語法錯誤 (R-06)**：`[Environment]::SpecialFolder::Programs` 非合法型別參照，`uninstall.ps1` 在移除 PATH 後即中斷。已修，commit 0f49a67（2026-10-26）。
+7. **系統匣欄位與 CLI 輸出不符 (R-07)**：`codex-reset-tray.ps1` 讀不存在的 `reset_credits`／`reset_in_words`／`account_status.plan_type`，StrictMode 下還會丟例外。已修，commit 1fbfc59（2026-10-26）。
+8. **`--hold` 失敗路徑不保留視窗 (R-08)**：只認 bun 編譯版才能偵測的雙擊啟動。已修，commit 1513760（2026-10-26）。
+9. **安裝腳本單一 PATH 項目被字串相加 (R-09)**：`C:\Only` + `C:\bin` 寫成 `C:\OnlyC:\bin`。已修，commit 3b4ff3e（2026-10-26）。
 
 ## 接受、不改契約
 
