@@ -1301,6 +1301,10 @@ async function testWatchUsageZonesMatchRenderedRows() {
 
 async function testWatchMouseClickTogglesResetTime() {  const auth = createAuthFile();
   const originalLog = console.log;
+  // 凍結時鐘：reset_at 與畫面倒數若跨過秒界線會從 2h 15m 變 2h 14m，造成偶發失敗。
+  const originalNow = Date.now;
+  const frozenNow = originalNow();
+  Date.now = () => frozenNow;
   const output = new EventEmitter();
   const input = new EventEmitter();
   const signalEmitter = new EventEmitter();
@@ -1395,6 +1399,7 @@ async function testWatchMouseClickTogglesResetTime() {  const auth = createAuthF
     );
   } finally {
     console.log = originalLog;
+    Date.now = originalNow;
     auth.cleanup();
   }
 }
