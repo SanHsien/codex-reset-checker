@@ -41,6 +41,59 @@ $global:TrayIcon = $null
 $global:CardWindow = $null
 $global:IsQuerying = $false
 
+function Get-Prop {
+    param($Object, [string]$Name)
+    if ($null -eq $Object) { return $null }
+    $prop = $Object.PSObject.Properties[$Name]
+    if ($null -eq $prop) { return $null }
+    return $prop.Value
+}
+
+function Format-ResetWords {
+    param($Window)
+    $seconds = Get-Prop $Window 'reset_after_seconds'
+    if ($null -eq $seconds) { return "即將重置" }
+    $totalMinutes = [math]::Floor([math]::Max(0, [double]$seconds) / 60)
+    if ($totalMinutes -eq 0 -and [double]$seconds -gt 0) { $totalMinutes = 1 }
+    $days = [math]::Floor($totalMinutes / 1440)
+    $hours = [math]::Floor(($totalMinutes % 1440) / 60)
+    $minutes = $totalMinutes % 60
+    $parts = @()
+    if ($days -gt 0) { $parts += "${days}d" }
+    if ($hours -gt 0 -or $days -gt 0) { $parts += "${hours}h" }
+    if ($minutes -gt 0 -or $parts.Count -eq 0) { $parts += "${minutes}m" }
+    return ($parts -join " ") + " 後重置"
+}
+
+# 把 CLI `--json` 輸出（available_count／credits、usage、usage_raw）整理成系統匣顯示用的欄位。
+function Get-TraySummary {
+    param($Data)
+
+    $credits = Get-Prop $Data 'available_count'
+    if ($null -eq $credits) {
+        $list = Get-Prop $Data 'credits'
+        if ($null -eq $list) { $list = Get-Prop $Data 'items' }
+        if ($null -eq $list) { $list = Get-Prop $Data 'data' }
+        $credits = if ($null -ne $list) { @($list).Count } else { 0 }
+    }
+
+    $usage = Get-Prop $Data 'usage'
+    $primary = Get-Prop $usage 'primary_window'
+    $secondary = Get-Prop $usage 'secondary_window'
+    $primaryUsed = Get-Prop $primary 'used_percent'
+    $secondaryUsed = Get-Prop $secondary 'used_percent'
+    $plan = Get-Prop (Get-Prop $Data 'usage_raw') 'plan_type'
+
+    [pscustomobject]@{
+        Plan           = if ($plan) { [string]$plan } else { "Codex" }
+        Credits        = [int]$credits
+        PrimaryUsed    = if ($null -ne $primaryUsed) { $primaryUsed } else { 0 }
+        SecondaryUsed  = if ($null -ne $secondaryUsed) { $secondaryUsed } else { 0 }
+        PrimaryReset   = Format-ResetWords $primary
+        SecondaryReset = Format-ResetWords $secondary
+    }
+}
+
 function Invoke-CheckerQuery {
     if ($global:IsQuerying) { return $null }
     $global:IsQuerying = $true
@@ -91,11 +144,8 @@ function Update-TrayStatus {
         return
     }
 
-    $credits = if ($data.reset_credits) { $data.reset_credits.Length } else { 0 }
-    $primaryPct = if ($data.usage -and $data.usage.primary_window) { $data.usage.primary_window.used_percent } else { 0 }
-    $secondaryPct = if ($data.usage -and $data.usage.secondary_window) { $data.usage.secondary_window.used_percent } else { 0 }
-
-    $tip = "Codex: 5h用量 $($primaryPct)% | 週用量 $($secondaryPct)% | 重置: $credits 次"
+    $summary = Get-TraySummary $data
+    $tip = "Codex: 5h用量 $($summary.PrimaryUsed)% | 週用量 $($summary.SecondaryUsed)% | 重置: $($summary.Credits) 次"
     if ($tip.Length -gt 63) { $tip = $tip.Substring(0, 60) + "..." }
     if ($global:TrayIcon) {
         $global:TrayIcon.Text = $tip
@@ -114,14 +164,14 @@ function Show-DashboardCard {
         $data = Invoke-CheckerQuery
     }
 
-    $plan = if ($data.account_status -and $data.account_status.plan_type) { $data.account_status.plan_type } else { "Codex" }
-    $credits = if ($data.reset_credits) { $data.reset_credits.Length } else { 0 }
-
-    $pUsed = if ($data.usage -and $data.usage.primary_window) { $data.usage.primary_window.used_percent } else { 0 }
-    $sUsed = if ($data.usage -and $data.usage.secondary_window) { $data.usage.secondary_window.used_percent } else { 0 }
-
-    $pReset = if ($data.usage -and $data.usage.primary_window -and $data.usage.primary_window.reset_in_words) { $data.usage.primary_window.reset_in_words } else { "即將重置" }
-    $sReset = if ($data.usage -and $data.usage.secondary_window -and $data.usage.secondary_window.reset_in_words) { $data.usage.secondary_window.reset_in_words } else { "即將重置" }
+    if (-not $data) { return }
+    $summary = Get-TraySummary $data
+    $plan = $summary.Plan
+    $credits = $summary.Credits
+    $pUsed = $summary.PrimaryUsed
+    $sUsed = $summary.SecondaryUsed
+    $pReset = $summary.PrimaryReset
+    $sReset = $summary.SecondaryReset
 
     [xml]$xaml = @"
 <Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -271,6 +321,9 @@ function Show-DashboardCard {
     $window.Show()
     $window.Activate()
 }
+
+# 被 dot-source（例如測試）時只載入函式，不建立系統匣圖示與訊息循環
+if ($MyInvocation.InvocationName -eq '.') { return }
 
 # 建立 NotifyIcon
 $tray = New-Object System.Windows.Forms.NotifyIcon
