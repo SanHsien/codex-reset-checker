@@ -80,3 +80,6 @@ pwsh -NoProfile -File tools\bootstrap_dev.ps1
 - **承諾或實作「執行檔／發布／安裝檔」時，交付標準是完成編譯、打 tag、建立 GitHub Release 並上傳二進位資產，嚴禁停在本地或只推 commit。**
   2026-10-17 實例：使用者要求實作免安裝執行檔與安裝流程，在本地完成程式碼與測試並 push main 後，誤以為「等待 CI 或後續手動發布」，被維護者糾正「為什麼又沒有編譯，發release、tag。做事不能只做一半」。在個人 fork (`SanHsien/<repo>`) 下，若涉及執行檔與發行物，必須主動打 tag、產出 release notes、透過 `gh release create` 上傳二進位資產，形成使用者直接可下載執行的終端閉環。
 
+## 路線圖
+
+- `ROADMAP.md` 是本 repo 後續工作的單一真相源。完成或新增工作時，在同一個 commit 更新它：做完的列刪掉、新工作加進去。不要在其他文件另列待辦。
