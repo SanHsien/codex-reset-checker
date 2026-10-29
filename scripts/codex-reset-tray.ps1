@@ -41,6 +41,7 @@ $global:LastData = $null
 $global:TrayIcon = $null
 $global:CardWindow = $null
 $global:IsQuerying = $false
+$global:LastQueryError = $null
 
 function Get-Prop {
     param($Object, [string]$Name)
@@ -96,8 +97,12 @@ function Get-TraySummary {
 }
 
 function Invoke-CheckerQuery {
+    param([ValidateRange(1, 2147483647)][int]$TimeoutMilliseconds = 15000)
+
     if ($global:IsQuerying) { return $null }
     $global:IsQuerying = $true
+    $global:LastQueryError = $null
+    $proc = $null
     try {
         $argsList = @("--json")
         if ($AuthPath) { $argsList += @("--auth", $AuthPath) }
@@ -118,21 +123,44 @@ function Invoke-CheckerQuery {
         $pinfo.CreateNoWindow = $true
         $pinfo.StandardOutputEncoding = [System.Text.Encoding]::UTF8
 
+        $clock = [System.Diagnostics.Stopwatch]::StartNew()
         $proc = [System.Diagnostics.Process]::Start($pinfo)
-        $stdout = $proc.StandardOutput.ReadToEnd()
-        $stderr = $proc.StandardError.ReadToEnd()
-        $proc.WaitForExit(15000)
+        # 同時排空兩個管道，期限涵蓋程序結束與輸出讀取，避免任一管道塞滿而互等。
+        $stdoutTask = $proc.StandardOutput.ReadToEndAsync()
+        $stderrTask = $proc.StandardError.ReadToEndAsync()
+        $remaining = [int][math]::Max(0, $TimeoutMilliseconds - $clock.ElapsedMilliseconds)
+        if (-not $proc.WaitForExit($remaining)) {
+            throw [System.TimeoutException]::new("查詢逾時")
+        }
+        $remaining = [int][math]::Max(0, $TimeoutMilliseconds - $clock.ElapsedMilliseconds)
+        $reads = [System.Threading.Tasks.Task[]]@($stdoutTask, $stderrTask)
+        if (-not [System.Threading.Tasks.Task]::WaitAll($reads, $remaining)) {
+            throw [System.TimeoutException]::new("查詢逾時")
+        }
+        $stdout = $stdoutTask.Result
 
         if ($proc.ExitCode -eq 0 -and $stdout.Trim()) {
             $data = $stdout.Trim() | ConvertFrom-Json
             $global:LastData = $data
             return $data
         }
+        $global:LastQueryError = "查詢失敗（無有效輸出或 CLI 結束碼非零）"
         return $null
     } catch {
+        $global:LastQueryError = if ($_.Exception -is [System.TimeoutException]) { "查詢逾時" } else { "查詢失敗" }
         return $null
     } finally {
-        $global:IsQuerying = $false
+        try {
+            if ($null -ne $proc) {
+                if (-not $proc.HasExited) {
+                    $proc.Kill()
+                    [void]$proc.WaitForExit(1000)
+                }
+            }
+        } finally {
+            if ($null -ne $proc) { $proc.Dispose() }
+            $global:IsQuerying = $false
+        }
     }
 }
 
@@ -140,7 +168,7 @@ function Update-TrayStatus {
     $data = Invoke-CheckerQuery
     if (-not $data) {
         if ($global:TrayIcon) {
-            $global:TrayIcon.Text = "Codex: 無法取得額度"
+            $global:TrayIcon.Text = if ($global:LastQueryError) { "Codex: $($global:LastQueryError)" } else { "Codex: 無法取得額度" }
         }
         return
     }

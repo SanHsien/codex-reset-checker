@@ -232,3 +232,100 @@ def test_install_script_has_no_bom_for_irm_iex() -> None:
     # README 的一行安裝是 `irm <url> | iex`：BOM 會變成字串開頭的 U+FEFF，
     # 讓開頭的 <# 區塊註解失效、整支腳本解析失敗。irm 會依 charset 正確解碼中文，不需要 BOM。
     assert not (ROOT / "scripts" / "install.ps1").read_bytes().startswith(codecs.BOM_UTF8)
+
+
+QUERY_PROBE = r"""
+param([string]$TrayScript, [string]$FakeRoot, [string]$Mode)
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+. $TrayScript
+$cliExe = $null
+$repoRoot = $FakeRoot
+$AuthPath = $null
+$env:TRAY_QUERY_TEST_MODE = $Mode
+$clock = [Diagnostics.Stopwatch]::StartNew()
+$data = Invoke-CheckerQuery -TimeoutMilliseconds 500
+$errorText = Get-Variable -Name LastQueryError -Scope Global -ValueOnly -ErrorAction SilentlyContinue
+$elapsed = $clock.ElapsedMilliseconds
+$busy = $global:IsQuerying
+$env:TRAY_QUERY_TEST_MODE = 'success'
+$retry = Invoke-CheckerQuery -TimeoutMilliseconds 2000
+$retryError = $global:LastQueryError
+$global:LastQueryError = $errorText
+$global:TrayIcon = [pscustomobject]@{ Text = '' }
+function Invoke-CheckerQuery { return $null }
+Update-TrayStatus
+[pscustomobject]@{
+    Data = $data; Error = $errorText; Elapsed = $elapsed
+    Busy = $busy; Retry = $retry; HostVersion = $PSVersionTable.PSVersion.ToString()
+    Tooltip = $global:TrayIcon.Text; RetryError = $retryError
+} | ConvertTo-Json -Compress
+"""
+
+FAKE_QUERY_CLI = r"""
+const fs = require('fs');
+const path = require('path');
+fs.appendFileSync(path.join(__dirname, 'pids.txt'), process.pid + '\n');
+const mode = process.env.TRAY_QUERY_TEST_MODE;
+if (mode === 'hang') setInterval(() => {}, 1000);
+else if (mode === 'stderr-hang') {
+  fs.writeSync(2, Buffer.alloc(2 * 1024 * 1024, 'e'));
+  setInterval(() => {}, 1000);
+} else if (mode === 'nonzero') process.exit(2);
+else if (mode === 'invalid') console.log('invalid json');
+else {
+  fs.writeSync(2, Buffer.alloc(2 * 1024 * 1024, 'e'));
+  console.log(JSON.stringify({available_count: 3}));
+}
+"""
+
+
+@pytest.mark.skipif(NODE is None, reason="node not available")
+@pytest.mark.parametrize("shell", [PWSH, WINDOWS_POWERSHELL], ids=["7", "5.1"])
+@pytest.mark.parametrize("mode", ["hang", "stderr-hang", "success", "nonzero", "invalid"])
+def test_tray_query_deadline_and_streams(shell: str | None, mode: str, tmp_path: Path) -> None:
+    if shell is None:
+        pytest.skip("PowerShell host not available")
+    fake_bin = tmp_path / "bin"
+    fake_bin.mkdir()
+    (fake_bin / "codex-reset-checker.js").write_text(FAKE_QUERY_CLI, encoding="utf-8")
+    probe = tmp_path / "query.ps1"
+    probe.write_text(QUERY_PROBE, encoding="utf-8-sig")
+    proc = subprocess.Popen(
+        [shell, "-NoProfile", "-NonInteractive", "-File", str(probe),
+         str(ROOT / "scripts" / "codex-reset-tray.ps1"), str(tmp_path), mode],
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        text=True, encoding="utf-8", errors="replace",
+    )
+    try:
+        try:
+            stdout, stderr = proc.communicate(timeout=8)
+        except subprocess.TimeoutExpired:
+            pytest.fail(f"{mode}: query blocked beyond watchdog (8 seconds)")
+        assert proc.returncode == 0, stdout + stderr
+        result = json.loads(stdout.strip().splitlines()[-1])
+        assert result["HostVersion"].startswith("7." if shell == PWSH else "5.1.")
+        assert result["Elapsed"] < 4000
+        assert result["Busy"] is False
+        assert result["Retry"]["available_count"] == 3
+        assert not result["RetryError"]
+        if mode == "success":
+            assert result["Data"]["available_count"] == 3
+            assert not result["Error"]
+        else:
+            assert result["Data"] is None
+            assert result["Error"]
+            assert result["Tooltip"] == "Codex: " + result["Error"]
+            if "hang" in mode:
+                assert "逾時" in result["Error"]
+        for pid in (fake_bin / "pids.txt").read_text().splitlines():
+            check = subprocess.run(
+                [shell, "-NoProfile", "-NonInteractive", "-Command",
+                 f"if (Get-Process -Id {int(pid)} -ErrorAction SilentlyContinue) {{ exit 1 }}"],
+                capture_output=True, timeout=10,
+            )
+            assert check.returncode == 0, f"fake CLI {pid} survived query"
+    finally:
+        if proc.poll() is None:
+            subprocess.run(["taskkill", "/PID", str(proc.pid), "/T", "/F"],
+                           capture_output=True, timeout=10)
+            proc.communicate(timeout=10)

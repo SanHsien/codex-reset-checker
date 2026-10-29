@@ -9,7 +9,6 @@
 ## 近期：可以直接動手
 | 項目 | 為什麼 | 驗收方式 | 建議執行者 | 證據 |
 | --- | --- | --- | --- | --- |
-| 重現並修正系統匣查詢逾時 | 在等待期限前同步讀 stdout、stderr，掛住的子程序無法被期限保護 | 用不退出與塞滿 stderr 的假 CLI 重現；改為雙流安全讀取及有效期限，超時能結束子程序、回報錯誤，5.1／7 均通過相關測試 | Codex | [scripts/codex-reset-tray.ps1:122](scripts/codex-reset-tray.ps1)；深掃報告（2026-10-27）「刻意不修／觀察」 |
 | 查明 Pages 失敗是否需要處理 | 快照有失敗結果，但不能推定是產品程式錯誤 | 讀最近 `Publish GitHub Pages` 失敗步驟；區分站點設定、私有 repo 方案限制與流程缺陷，只有可重現流程缺陷才修；若原因是私有 repo 方案不支援 Pages，屬已知邊界，結論是停用該 workflow 或交維護者決定；需改可見性或付費時交維護者決定 | Codex | 2026-10-29 `gh run list -w "Publish GitHub Pages"`：2026-10-17 failure；[.github/workflows/pages.yml:1](.github/workflows/pages.yml) |
 | 核對修正後的 Windows 安裝與移除路徑 | 深掃只測純函式與解析，未跑真實安裝／解除安裝 | 隔離使用者環境驗證單項 PATH 不黏連、系統匣讀取摘要、無 pwsh 可回退、查詢失敗保留視窗；移除後捷徑及安裝檔清乾淨且保留其他 PATH | 維護者 | [REVIEW.md:26](REVIEW.md)、[CHANGELOG.md:7](CHANGELOG.md)；深掃報告（2026-10-27）「範圍」 |
 

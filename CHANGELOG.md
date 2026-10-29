@@ -4,6 +4,7 @@
 
 ### Fixed
 
+- 系統匣查詢同時讀取 stdout／stderr，15 秒期限涵蓋程序等待與輸出讀取；逾時結束子程序並顯示錯誤，避免不退出或大量 stderr 使查詢掛住。回歸測試涵蓋 Windows PowerShell 5.1 與 PowerShell 7。
 - 系統匣找不到 `pwsh` 時改用內建 `powershell.exe`（5.1）；系統匣與解除安裝腳本補 UTF-8 BOM、系統匣移除 `?.`，使 5.1 能解析（`install.ps1` 刻意不加 BOM，否則 `irm | iex` 會解析失敗）。
 - `scripts/uninstall.ps1`：`SpecialFolder` 型別寫法錯誤使解除安裝在移除 PATH 後中斷，捷徑與安裝目錄從未被清除（0f49a67）。
 - `scripts/codex-reset-tray.ps1`：系統匣改讀 CLI `--json` 實際輸出欄位，額度次數與重置時間不再恆為 0／「即將重置」（1fbfc59）。
