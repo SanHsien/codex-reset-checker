@@ -57,3 +57,17 @@
 - **刻意不做**：workflow 的 action 釘選方式不一致（`codeql`／`dependency-freshness` 釘 SHA，其餘用 tag）。
   統一釘 SHA 屬跨檔慣例變更，交維護者決定；Dependabot 已涵蓋 github-actions。
   **觸發條件**：維護者同意，或出現 tag 被改寫的供應鏈事件。
+
+## 2026-11-02：不在 fork 發佈 GitHub Pages
+
+- **問題**：`Publish GitHub Pages`（run 39045986830，2026-10-17）在 `actions/configure-pages` 失敗，
+  因為本 repo 沒在 Settings 啟用 Pages（`gh api repos/SanHsien/codex-reset-checker/pages` 回 404）。
+  workflow 只在 `public/**` 有改動時觸發，同步上游的網站改動時會再紅。
+- **決定**：不啟用。`public/` 是上游作者的介紹頁，在本 fork 名下重新發佈沒有用途，還會讓人以為是另一個官方站點。
+- **做法**：`.github/workflows/pages.yml` 的 `build` job 加 `if: github.repository == 'doggy8088/codex-reset-checker'`，
+  在 fork 上跳過，`deploy` 因 `needs: build` 一併跳過。不刪 workflow：它來自上游 PR #1、#2（見 `docs/UPSTREAM.md`），
+  刪除會讓之後同步上游時衝突；一行條件的衝突面最小。
+- **發版技能不適用的步驟**：`.agents/skills/bump-and-release/SKILL.md` 第 57、59、69 行要追蹤 Pages run、
+  以 Pages 部署成功為完成條件。在本 fork，發版改 `public/index.html` 觸發的 Pages run 顯示 skipped 是預期結果，
+  不是失敗，不要因此去「處理 Pages」。SKILL.md 與上游相同，為了同步不衝突而不改。
+- **觸發條件**：維護者要在本 fork 發佈自己的網站時，移除該條件並在 Settings → Pages 把 Source 設為 GitHub Actions。

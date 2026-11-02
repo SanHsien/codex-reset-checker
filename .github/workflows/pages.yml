@@ -19,6 +19,9 @@ concurrency:
 jobs:
   build:
     name: Prepare site
+    # The site in public/ is the upstream author's page; this fork does not republish it
+    # (docs/DECISIONS.md, 2026-11-02). deploy needs build, so it is skipped as well.
+    if: github.repository == 'doggy8088/codex-reset-checker'
     runs-on: ubuntu-latest
 
     steps:
