@@ -79,7 +79,7 @@
 - **決定**：建議在 Settings → General → Danger Zone 按 Leave fork network（https://github.com/SanHsien/codex-reset-checker/settings）。不可逆，由維護者本人按。
 - **來源 credit 不靠 fork 標示**：README 開頭、`NOTICE.md`、`FORK.md` 都寫明 fork 自 [`doggy8088/codex-reset-checker`](https://github.com/doggy8088/codex-reset-checker) 與授權，脫離後原樣保留。
 - **上游追蹤照舊**：`tools/upstream_baseline.json` 與 `Upstream check` workflow 不依賴 fork 標示；repo-fleet-ops 的 `audit` 認水位檔，換台電腦重新 clone 也照樣要求上游檢查。
-- **會遺失**：GitHub 文件說不保留 issue、PR、wiki、star、watcher。2026-11-07 查：PR 1 筆（已結束）、star 0、wiki 沒有內容。release `v1.1.1` 是否保留文件沒寫，資產與說明已備份到維護者的 `OneDrive\文件\電腦維護\2026-11 fork 脫離前 release 備份\``（雜湊已核對）。
+- **會遺失**：GitHub 文件說不保留 issue、PR、wiki、star、watcher。2026-11-07 查：PR 1 筆（已結束）、star 0、wiki 沒有內容。release `v1.1.1` 是否保留文件沒寫，資產與說明已備份到維護者的 `OneDrive\文件\電腦維護\2026-11 fork 脫離前 release 備份\`（雜湊已核對）。
 - **結果**：維護者 2026-11-07 已按。驗收：`gh api repos/SanHsien/codex-reset-checker --jq .fork` 回 `false`、`parent` 為空；PR 1 筆、release v1.1.1（5 個資產）都還在（GitHub 文件說 PR 不保留，實際保留）；Dependabot 告警與 Actions 照常；分支保護仍在；repo-fleet-ops `audit` 0 缺口。
 
 ## 2026-11-08：安裝與移除路徑的真實驗收改列中期
