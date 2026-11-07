@@ -310,9 +310,11 @@ def test_tray_query_deadline_and_streams(shell: str | None, mode: str, tmp_path:
         assert proc.returncode == 0, stdout + stderr
         result = json.loads(stdout.strip().splitlines()[-1])
         assert result["HostVersion"].startswith("7." if shell == PWSH else "5.1.")
-        # 500 毫秒期限加上殺子程序的時間；上限放寬到 20 秒容納負載，
-        # 仍遠小於 hang 模式「永遠不結束」，所以不會藏住沒有期限的回歸。
-        assert result["Elapsed"] < 20000
+        # 500 毫秒期限加上殺子程序的時間，量的是 Invoke-CheckerQuery 本身（不含 PowerShell／node 冷啟動）。
+        # 上限 10 秒要嚴格低於預設逾時 15 秒（scripts/codex-reset-tray.ps1 的 TimeoutMilliseconds = 15000）：
+        # 若期限參數被忽略、退回 15 秒預設，hang 模式會跑滿 15 秒而讓這條斷言變紅。
+        # 上限若 >= 15 秒就藏得住這種回歸；看門狗另外抓「永遠不結束」的真正卡死。
+        assert result["Elapsed"] < 10000
         assert result["Busy"] is False
         assert result["Retry"]["available_count"] == 3
         assert not result["RetryError"]

@@ -8,12 +8,13 @@
 
 ## 近期：可以直接動手
 
-目前沒有近期項目；原「核對安裝與移除路徑」改列中期（見下，理由在 [docs/DECISIONS.md](docs/DECISIONS.md) 2026-11-08 段）。
+| 項目 | 為什麼 | 驗收方式 | 建議執行者 | 證據 |
+| --- | --- | --- | --- | --- |
+| 核對修正後的 Windows 安裝與移除路徑 | 修正後的 PATH、系統匣與移除流程只有純函式測試，缺真實安裝／解除安裝的證據；`install.ps1` 寫 HKCU 的 User PATH 與開始功能表，不能在日常使用者環境跑，所以改在 Windows Sandbox 裡跑。2026-11-08 實查：`C:\Windows\System32\WindowsSandbox.exe` 存在；功能是否已啟用未能證實（`Get-WindowsOptionalFeature` 需系統管理員權限、非提升身分被拒；元件存放區的 Containers-DisposableClientVM 主套件狀態為 Staged），所以第一步先確認或啟用 | 在 Windows Sandbox 裡跑 `install.ps1`／`uninstall.ps1`：驗證單項 PATH 不黏連、系統匣讀取摘要、無 pwsh 可回退、查詢失敗保留視窗；移除後捷徑及安裝檔清乾淨且保留其他 PATH；結果寫回 `REVIEW.md` | Claude 主 session（agent-desktop 在 Sandbox 內操作）；若 Sandbox 功能未啟用，先由維護者以系統管理員啟用並重新開機 | [REVIEW.md:26](REVIEW.md)、[CHANGELOG.md:7](CHANGELOG.md)；純函式與解析已有 `tools/tests/test_windows_scripts.py`，缺的是真實安裝／解除安裝 |
 
 ## 中期：等條件成立再做
 | 項目 | 觸發條件 | 驗收方式 | 建議執行者 | 證據 |
 | --- | --- | --- | --- | --- |
-| 核對修正後的 Windows 安裝與移除路徑 | 有可拋棄的 Windows 環境（維護者開 Windows Sandbox 視窗或測試 VM；`install.ps1` 寫 HKCU 的 User PATH 與開始功能表，不能在日常使用者環境跑） | 在該環境驗證單項 PATH 不黏連、系統匣讀取摘要、無 pwsh 可回退、查詢失敗保留視窗；移除後捷徑及安裝檔清乾淨且保留其他 PATH；結果寫回 `REVIEW.md` | 維護者 | [REVIEW.md:26](REVIEW.md)、[CHANGELOG.md:7](CHANGELOG.md)；純函式與解析已有 `tools/tests/test_windows_scripts.py`，缺的是真實安裝／解除安裝 |
 | 發布包含 Windows 修正的執行檔 | 安裝與產品驗收通過，維護者授權發行 | 更新版本及 Scoop 所需資訊；重建執行檔並核對來源與雜湊，tag、Release、可下載資產一致，下載版 smoke 通過 | Codex | [AGENTS.md:78](AGENTS.md)、[CHANGELOG.md:3](CHANGELOG.md)、[tools/build_exe.ps1:50](tools/build_exe.ps1) |
 | 收緊建置成功判斷 | 準備發布新版，或確認不再允許沿用舊執行檔 | 以編譯失敗／舊 exe 存在與 postject 非零案例驗證；失敗不可把舊產物標成本次成功，正常產物能執行 `--version` | Codex | [tools/build_exe.ps1:78](tools/build_exe.ps1)、[tools/build_exe.ps1:85](tools/build_exe.ps1)；深掃報告（2026-10-27）的既有取捨 |
 | 重審 Ruff 延後版本 | freshness 顯示超過已審精度的新版本 | 用新版本跑 `ruff check --select E9,F tools` 與維護測試；保持下限的相容承諾，採用或續延附理由 | Codex | [docs/DECISIONS.md:52](docs/DECISIONS.md) |

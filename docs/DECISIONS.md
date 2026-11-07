@@ -82,8 +82,9 @@
 - **會遺失**：GitHub 文件說不保留 issue、PR、wiki、star、watcher。2026-11-07 查：PR 1 筆（已結束）、star 0、wiki 沒有內容。release `v1.1.1` 是否保留文件沒寫，資產與說明已備份到維護者的 `OneDrive\文件\電腦維護\2026-11 fork 脫離前 release 備份\`（雜湊已核對）。
 - **結果**：維護者 2026-11-07 已按。驗收：`gh api repos/SanHsien/codex-reset-checker --jq .fork` 回 `false`、`parent` 為空；PR 1 筆、release v1.1.1（5 個資產）都還在（GitHub 文件說 PR 不保留，實際保留）；Dependabot 告警與 Actions 照常；分支保護仍在；repo-fleet-ops `audit` 0 缺口。
 
-## 2026-11-08：安裝與移除路徑的真實驗收改列中期
+## 2026-11-08：安裝與移除路徑的真實驗收列為近期（在 Windows Sandbox 裡跑）
 
 - **背景**：路線圖近期列要求在隔離使用者環境跑真實安裝／解除安裝。`scripts/install.ps1` 用 `[Environment]::SetEnvironmentVariable("Path", ..., User)` 寫 HKCU 並在開始功能表建立資料夾；`scripts/uninstall.ps1` 反向移除。這兩者無法用 `-InstallDir` 重導，在日常使用者環境跑會改到維護者的實際 PATH。
-- **決定**：不在這台主機的日常使用者環境跑；該列改為中期，觸發條件是有可拋棄的 Windows 環境（Windows Sandbox 視窗或測試 VM）。純函式與解析的回歸測試已存在於 `tools/tests/test_windows_scripts.py`，不重複。
-- **重審條件**：維護者能開 Sandbox／VM 時執行；或準備發布新版（中期「發布包含 Windows 修正的執行檔」的前提之一）。
+- **決定**：不在日常使用者環境跑，改在 Windows Sandbox 裡跑，列在 `ROADMAP.md` 近期；Sandbox 內的操作由 Claude 主 session 以 agent-desktop 代做，不留給維護者。純函式與解析的回歸測試已存在於 `tools/tests/test_windows_scripts.py`，不重複。
+- **環境實查（2026-11-08）**：`C:\Windows\System32\WindowsSandbox.exe` 與 `WindowsSandboxClient.exe` 存在；Hyper-V 相關服務（`vmcompute`、`hvhost`、`CmService`）執行中。Sandbox 功能是否已啟用未能證實：`Get-WindowsOptionalFeature -Online -FeatureName Containers-DisposableClientVM` 需要系統管理員權限，非提升身分被拒；元件存放區裡該功能的主套件狀態為 Staged（語言套件為 Installed）。因此第一步是確認功能狀態，若未啟用由維護者以系統管理員啟用並重新開機，這是唯一留給人的關卡。
+- **後續**：驗收通過後把結果寫回 `REVIEW.md`；它同時是中期「發布包含 Windows 修正的執行檔」的前提之一。
