@@ -9,7 +9,6 @@
 ## 近期：可以直接動手
 | 項目 | 為什麼 | 驗收方式 | 建議執行者 | 證據 |
 | --- | --- | --- | --- | --- |
-| 離開 GitHub fork 網路（Settings → General → Danger Zone → Leave fork network，https://github.com/SanHsien/codex-reset-checker/settings） | 本線已有獨有功能並分叉獨立發展（`docs/DECISIONS.md` 2026-11-07）；不可逆，維護者確認後本人按 | `gh api repos/SanHsien/codex-reset-checker --jq .fork` 回 `false`；release `v1.1.1` 還在（不在就從備份重建）；README／NOTICE 的來源段落仍在；`main` 的 CI 仍 success | 維護者 | `docs/DECISIONS.md` 2026-11-07；repo-fleet-ops `docs/FORK-NETWORK-REVIEW.md` |
 | 核對修正後的 Windows 安裝與移除路徑 | 深掃只測純函式與解析，未跑真實安裝／解除安裝 | 隔離使用者環境驗證單項 PATH 不黏連、系統匣讀取摘要、無 pwsh 可回退、查詢失敗保留視窗；移除後捷徑及安裝檔清乾淨且保留其他 PATH | 維護者 | [REVIEW.md:26](REVIEW.md)、[CHANGELOG.md:7](CHANGELOG.md)；深掃報告（2026-10-27）「範圍」 |
 
 ## 中期：等條件成立再做
