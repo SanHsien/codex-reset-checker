@@ -71,3 +71,12 @@
   以 Pages 部署成功為完成條件。在本 fork，發版改 `public/index.html` 觸發的 Pages run 顯示 skipped 是預期結果，
   不是失敗，不要因此去「處理 Pages」。SKILL.md 與上游相同，為了同步不衝突而不改。
 - **觸發條件**：維護者要在本 fork 發佈自己的網站時，移除該條件並在 Settings → Pages 把 Source 設為 GitHub Actions。
+
+## 2026-11-07：離開 GitHub fork 網路（等維護者按）
+
+- **判準**：維護者 2026-11-07 定的：與上游差異大、本線有獨有功能、已分叉獨立發展，就可以脫離；與上游有沒有共用歷史、上游活不活躍都不列入（repo-fleet-ops `docs/PLAYBOOK.md` §9）。
+- **本線的獨有功能**：系統匣小工具、一鍵安裝／移除、獨立執行檔、Scoop manifest，release 走到 v1.1.1（上游 v1.0.2）。
+- **決定**：建議在 Settings → General → Danger Zone 按 Leave fork network（https://github.com/SanHsien/codex-reset-checker/settings）。不可逆，由維護者本人按。
+- **來源 credit 不靠 fork 標示**：README 開頭、`NOTICE.md`、`FORK.md` 都寫明 fork 自 [`doggy8088/codex-reset-checker`](https://github.com/doggy8088/codex-reset-checker) 與授權，脫離後原樣保留。
+- **上游追蹤照舊**：`tools/upstream_baseline.json` 與 `Upstream check` workflow 不依賴 fork 標示；repo-fleet-ops 的 `audit` 認水位檔，換台電腦重新 clone 也照樣要求上游檢查。
+- **會遺失**：GitHub 文件說不保留 issue、PR、wiki、star、watcher。2026-11-07 查：PR 1 筆（已結束）、star 0、wiki 沒有內容。release `v1.1.1` 是否保留文件沒寫，資產與說明已備份到維護者的 `OneDrive\文件\電腦維護\2026-11 fork 脫離前 release 備份\``（雜湊已核對）。

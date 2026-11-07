@@ -9,12 +9,12 @@
 ## 近期：可以直接動手
 | 項目 | 為什麼 | 驗收方式 | 建議執行者 | 證據 |
 | --- | --- | --- | --- | --- |
+| 離開 GitHub fork 網路（Settings → General → Danger Zone → Leave fork network，https://github.com/SanHsien/codex-reset-checker/settings） | 本線已有獨有功能並分叉獨立發展（`docs/DECISIONS.md` 2026-11-07）；不可逆，維護者確認後本人按 | `gh api repos/SanHsien/codex-reset-checker --jq .fork` 回 `false`；release `v1.1.1` 還在（不在就從備份重建）；README／NOTICE 的來源段落仍在；`main` 的 CI 仍 success | 維護者 | `docs/DECISIONS.md` 2026-11-07；repo-fleet-ops `docs/FORK-NETWORK-REVIEW.md` |
 | 核對修正後的 Windows 安裝與移除路徑 | 深掃只測純函式與解析，未跑真實安裝／解除安裝 | 隔離使用者環境驗證單項 PATH 不黏連、系統匣讀取摘要、無 pwsh 可回退、查詢失敗保留視窗；移除後捷徑及安裝檔清乾淨且保留其他 PATH | 維護者 | [REVIEW.md:26](REVIEW.md)、[CHANGELOG.md:7](CHANGELOG.md)；深掃報告（2026-10-27）「範圍」 |
 
 ## 中期：等條件成立再做
 | 項目 | 觸發條件 | 驗收方式 | 建議執行者 | 證據 |
 | --- | --- | --- | --- | --- |
-| 重評要不要離開 GitHub fork 網路 | 上游預設分支到 2026-12-25 仍沒有新 commit（最後一筆 2026-09-26，滿 90 天），或上游 archived／刪除 | 照 repo-fleet-ops PLAYBOOK §9 重判；改判「建議脫離」時先補齊 README／NOTICE 的來源段落、確認 release 資產可重建，再列給維護者確認（按鈕由維護者按） | Claude Opus | 2026-11-07 評估判「再觀察」：本線加了系統匣、安裝程式、執行檔與 Scoop，release 走到 v1.1.1，但產品執行路徑以上游為準（repo-fleet-ops `docs/FORK-NETWORK-REVIEW.md`）；查法 `gh api "repos/doggy8088/codex-reset-checker/commits?per_page=1"` |
 | 發布包含 Windows 修正的執行檔 | 安裝與產品驗收通過，維護者授權發行 | 更新版本及 Scoop 所需資訊；重建執行檔並核對來源與雜湊，tag、Release、可下載資產一致，下載版 smoke 通過 | Codex | [AGENTS.md:78](AGENTS.md)、[CHANGELOG.md:3](CHANGELOG.md)、[tools/build_exe.ps1:50](tools/build_exe.ps1) |
 | 收緊建置成功判斷 | 準備發布新版，或確認不再允許沿用舊執行檔 | 以編譯失敗／舊 exe 存在與 postject 非零案例驗證；失敗不可把舊產物標成本次成功，正常產物能執行 `--version` | Codex | [tools/build_exe.ps1:78](tools/build_exe.ps1)、[tools/build_exe.ps1:85](tools/build_exe.ps1)；深掃報告（2026-10-27）的既有取捨 |
 | 重審 Ruff 延後版本 | freshness 顯示超過已審精度的新版本 | 用新版本跑 `ruff check --select E9,F tools` 與維護測試；保持下限的相容承諾，採用或續延附理由 | Codex | [docs/DECISIONS.md:52](docs/DECISIONS.md) |
