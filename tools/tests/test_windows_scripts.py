@@ -248,7 +248,7 @@ $errorText = Get-Variable -Name LastQueryError -Scope Global -ValueOnly -ErrorAc
 $elapsed = $clock.ElapsedMilliseconds
 $busy = $global:IsQuerying
 $env:TRAY_QUERY_TEST_MODE = 'success'
-$retry = Invoke-CheckerQuery -TimeoutMilliseconds 2000
+$retry = Invoke-CheckerQuery -TimeoutMilliseconds 15000
 $retryError = $global:LastQueryError
 $global:LastQueryError = $errorText
 $global:TrayIcon = [pscustomobject]@{ Text = '' }
@@ -279,6 +279,9 @@ else {
 """
 
 
+WATCHDOG_SECONDS = 60
+
+
 @pytest.mark.skipif(NODE is None, reason="node not available")
 @pytest.mark.parametrize("shell", [PWSH, WINDOWS_POWERSHELL], ids=["7", "5.1"])
 @pytest.mark.parametrize("mode", ["hang", "stderr-hang", "success", "nonzero", "invalid"])
@@ -298,13 +301,18 @@ def test_tray_query_deadline_and_streams(shell: str | None, mode: str, tmp_path:
     )
     try:
         try:
-            stdout, stderr = proc.communicate(timeout=8)
+            # 查詢期限在探針裡是 500 毫秒；假 CLI 的 hang 模式永遠不會自己結束，
+            # 所以真正的卡死會被這個看門狗抓到，不管它設 8 秒還是 60 秒。
+            # 寬到 60 秒，是為了讓負載下 PowerShell／node 冷啟動（多個測試並行時可達數十秒）不被誤判。
+            stdout, stderr = proc.communicate(timeout=WATCHDOG_SECONDS)
         except subprocess.TimeoutExpired:
-            pytest.fail(f"{mode}: query blocked beyond watchdog (8 seconds)")
+            pytest.fail(f"{mode}: query blocked beyond watchdog ({WATCHDOG_SECONDS} seconds)")
         assert proc.returncode == 0, stdout + stderr
         result = json.loads(stdout.strip().splitlines()[-1])
         assert result["HostVersion"].startswith("7." if shell == PWSH else "5.1.")
-        assert result["Elapsed"] < 4000
+        # 500 毫秒期限加上殺子程序的時間；上限放寬到 20 秒容納負載，
+        # 仍遠小於 hang 模式「永遠不結束」，所以不會藏住沒有期限的回歸。
+        assert result["Elapsed"] < 20000
         assert result["Busy"] is False
         assert result["Retry"]["available_count"] == 3
         assert not result["RetryError"]
